@@ -1,0 +1,29 @@
+{
+  "name": "dynamic-power",
+  "version": "1.0.0",
+  "description": "Calculates earnings with dynamic power",
+  "main": "app.js",
+  "scripts": {
+    "tsc": "tsc",
+    "tsc-watcher": "tsc -w",
+    "start": "node build/app.js",
+    "test": "jest --config ./jest.config.js",
+    "format:fix": "prettier --write src; prettier --write test"
+  },
+  "dependencies": {
+    "tsconfig-paths": "^4.1.2",
+    "date-holidays": "3.19.0",
+    "date-fns": "3.6.0",
+    "reflect-metadata": "0.1.13"
+  },
+  "devDependencies": {
+    "ts-node": "10.9.1",
+    "jest": "29.7.0",
+    "ts-jest": "29.1.4",
+    "typescript": "4.9.5",
+    "prettier": "3.3.0",
+    "@types/prettier": "^3.0.0",
+    "@types/jest": "29.5.12",
+    "@types/node": "18.19.8"
+  }
+}

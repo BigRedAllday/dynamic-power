@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "outDir": "./build",
+    "types": ["node", "jest"]
+  },
+  "exclude": ["node_modules", "build", "autogen"],
+  "include": ["test/matchers/custom-matcher.d.ts"],
+  "typeRoots": ["./node_modules/@types", "./test/types"]
+}
