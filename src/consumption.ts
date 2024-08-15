@@ -6,9 +6,11 @@ import Holidays from "date-holidays";
 export class ConsumptionHandler implements IConsumptionHandler {
   private consumptionMap: Map<string, ConsumptionData> = new Map();
   private holidays: Holidays;
+  private holidayCache: Map<string, boolean>;
 
   constructor() {
     this.holidays = new Holidays("DE");
+    this.holidayCache = new Map();
   }
 
   /**
@@ -96,7 +98,13 @@ export class ConsumptionHandler implements IConsumptionHandler {
       "Saturday"
     ];
 
-    const dayIndex: number = this.holidays.isHoliday(date) ? 0 : date.getDay();
+    let isHoliday = this.holidayCache.get(date.toISOString());
+    if (isHoliday === undefined) {
+      isHoliday = this.holidays.isHoliday(date) !== false;
+      this.holidayCache.set(date.toISOString(), isHoliday);
+    }
+
+    const dayIndex: number = isHoliday ? 0 : date.getDay();
     return daysOfWeek[dayIndex];
   }
 }

@@ -1,5 +1,5 @@
 import { Simulation } from "../src/simulation";
-import { IConsumptionHandler, IPriceHandler } from "../src/interfaces";
+import { IBatteryPlanner, IConsumptionHandler, IPriceHandler } from "../src/interfaces";
 import { Storage } from "../src/storage";
 import { SimulationProps, SimulationType } from "../src/types";
 import { addHours } from "date-fns";
@@ -13,15 +13,18 @@ describe("Simulation with storage integration", () => {
   };
 
   const consumptionHandler: IConsumptionHandler = {
-    getConsumption: jest.fn(),
-    get800WConsumption: jest.fn()
+    getConsumption: jest.fn()
   };
+
+  const batteryPlanner: IBatteryPlanner = {
+    getMinChargeWh: jest.fn()
+  }
 
   const storage = new Storage(1000, 80);
 
   beforeEach(() => {
     storage.reset();
-    sut = new Simulation(priceHandler, consumptionHandler, storage);
+    sut = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
   });
 
   afterEach(() => {
@@ -495,13 +498,13 @@ describe("Simulation with storage integration", () => {
 
       // run 1
       const storage1 = new Storage(400, 80);
-      const simulation1 = new Simulation(priceHandler, consumptionHandler, storage1);
+      const simulation1 = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage1);
       storage1.process(200, 0);
       const result1 = simulation1.start(simulationProps);
       const diff1 = result1.totalCostsFixed - result1.totalCostsDynamic;
 
       const storage2 = new Storage(400, 20);
-      const simulation2 = new Simulation(priceHandler, consumptionHandler, storage2);
+      const simulation2 = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage2);
       storage2.process(200, 0);
       const result2 = simulation2.start(simulationProps);
       const diff2 = result2.totalCostsFixed - result2.totalCostsDynamic;
