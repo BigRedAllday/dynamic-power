@@ -1,6 +1,9 @@
 import { TStorageProcessResult } from "./types";
 import { IStorage } from "./interfaces";
 
+/**
+ * Storage logic
+ */
 export class Storage implements IStorage {
   private currentChargeOld: number = 0;
   private currentCharge: number = 0;
@@ -16,6 +19,9 @@ export class Storage implements IStorage {
     this.efficiencyPercent = efficiencyPercent;
   }
 
+  /**
+   * Resets all data (for example sets current charge to 0)
+   */
   reset() {
     this.currentCharge = 0;
     this.maximumCharge = 0;
@@ -24,6 +30,11 @@ export class Storage implements IStorage {
     this.calcMinimumCharge = false;
   }
 
+  /**
+   * Processes feed in and consumptions
+   * @param feedInWh
+   * @param consumptionWh
+   */
   process(feedInWh: number, consumptionWh: number): TStorageProcessResult {
     const consumptionWithLimit = this.consumptionLimit
       ? Math.min(consumptionWh, this.consumptionLimit)
@@ -32,10 +43,17 @@ export class Storage implements IStorage {
     return this.addOrRemoveFromStorage(feedInWh, consumptionWithLimit);
   }
 
+  /**
+   * Sets maximum power the battery can provide
+   * @param consumptionLimit
+   */
   setConsumptionLimit(consumptionLimit: number) {
     this.consumptionLimit = consumptionLimit;
   }
 
+  /**
+   * Sets consumption limit to "no limit"
+   */
   resetConsumptionLimit() {
     this.consumptionLimit = undefined;
   }
@@ -158,5 +176,9 @@ export class Storage implements IStorage {
 
   isEmpty(): boolean {
     return this.currentCharge === 0;
+  }
+
+  getStateOfCharge(): number {
+    return this.currentCharge;
   }
 }

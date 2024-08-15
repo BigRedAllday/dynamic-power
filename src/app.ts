@@ -2,34 +2,63 @@ import { PriceHandler } from "./price";
 import { ConsumptionHandler } from "./consumption";
 import { Simulation } from "./simulation";
 import { Storage } from "./storage";
-import console from "console";
+import * as console from "console";
 import { ConsumptionProfiles, SimulationProps, SimulationType } from "./types";
+import { BatteryPlanner } from "./batteryPlanner";
 
 const SIMULATION_TYPE = SimulationType.STAND_ALONE_INVERTER;
+const PROFILES = [
+  ConsumptionProfiles.TV,
+  ConsumptionProfiles.ROUTER,
+  ConsumptionProfiles.DISHWASHER
+];
+
+const START_CHARGE_POWER = 2000;
+const CHARGE_POWER_STEPS = 1000;
+const MAX_CHARGE_POWER = 10000;
+
+const START_STORAGE_SIZE = 500;
+const STORAGE_SIZE_STEPS = 1000;
+const MAX_STORAGE_SIZE = 10000;
+
+const START_HYSTERESIS = 0;
+const HYSTERESIS_STEPS = 10;
+const MAX_HYSTERESIS = 80;
+
+const CONSUMPTION_PRICE = 0.233;
+const EFFICIENCY_BATTERY = 80;
 
 async function main() {
-  const priceHandler = new PriceHandler(0.233);
+  const priceHandler = new PriceHandler(CONSUMPTION_PRICE);
   priceHandler.loadPriceTable();
 
   const consumptionHandler = new ConsumptionHandler();
-  consumptionHandler.loadProfiles([ConsumptionProfiles.REFRIGERATOR]);
+  consumptionHandler.loadProfiles(PROFILES);
+  const hasBlockedAreas = consumptionHandler.hasBlockedAreas();
 
-  let chargePowerW = 100;
-  let storageSizeWh = 500;
-  let hysteresisDischargePercent = 0;
+  const batteryPlanner = new BatteryPlanner(consumptionHandler);
+
+  let chargePowerW = START_CHARGE_POWER;
+  let storageSizeWh = START_STORAGE_SIZE;
+  let hysteresisDischargePercent = START_HYSTERESIS;
 
   let minPrice: number | undefined;
   let minPriceMetadata = "no data";
 
-  let minPrice2kwStorage: number | undefined;
-  let minPrice2KwStorageMetadata = "no data";
+  console.log(`Average Price: ${priceHandler.getAveragePrice()}`);
 
-  console.log("Average Price: " + priceHandler.getAveragePrice());
+  while (
+    chargePowerW <= MAX_CHARGE_POWER ||
+    storageSizeWh <= MAX_STORAGE_SIZE ||
+    hysteresisDischargePercent <= MAX_HYSTERESIS
+  ) {
+    if (hasBlockedAreas) {
+      batteryPlanner.calculateMinCharges(chargePowerW, priceHandler.getRange());
+    }
 
-  while (chargePowerW !== 1000 || storageSizeWh !== 10000 || hysteresisDischargePercent !== 80) {
-    const storage = new Storage(storageSizeWh, 80);
+    const storage = new Storage(storageSizeWh, EFFICIENCY_BATTERY);
 
-    const simulation = new Simulation(priceHandler, consumptionHandler, storage);
+    const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
 
     const simulationProps: SimulationProps = {
       hysteresisChargeDischargePercent: hysteresisDischargePercent,
@@ -54,34 +83,22 @@ async function main() {
       minPriceMetadata = resultString;
     }
 
-    if (
-      storageSizeWh === 2000 &&
-      (minPrice2kwStorage === undefined || minPrice2kwStorage > result.totalCostsDynamic)
-    ) {
-      minPrice2kwStorage = result.totalCostsDynamic;
-      minPrice2KwStorageMetadata = resultString;
+    chargePowerW = chargePowerW + CHARGE_POWER_STEPS;
+
+    if (chargePowerW >= MAX_CHARGE_POWER) {
+      chargePowerW = START_CHARGE_POWER;
+      storageSizeWh = storageSizeWh + STORAGE_SIZE_STEPS;
     }
 
-    chargePowerW = chargePowerW + 100;
-
-    if (chargePowerW === 1100) {
-      chargePowerW = 100;
-      storageSizeWh = storageSizeWh + 500;
-    }
-
-    if (storageSizeWh === 10500) {
-      storageSizeWh = 500;
-      hysteresisDischargePercent = hysteresisDischargePercent + 10;
+    if (storageSizeWh >= MAX_STORAGE_SIZE) {
+      storageSizeWh = START_STORAGE_SIZE;
+      hysteresisDischargePercent = hysteresisDischargePercent + HYSTERESIS_STEPS;
     }
   }
 
   console.log(" ");
   console.log("BEST VALUE:");
   console.log(minPriceMetadata);
-
-  console.log(" ");
-  console.log("BEST VALUE 2kW:");
-  console.log(minPrice2KwStorageMetadata);
 }
 
 //Invoke the main function

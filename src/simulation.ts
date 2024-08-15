@@ -1,21 +1,31 @@
-import { IConsumptionHandler, IPriceHandler, IStorage } from "./interfaces";
-import { SimulationProps, SimulationResult, SimulationType } from "./types";
+import { IBatteryPlanner, IConsumptionHandler, IPriceHandler, IStorage } from "./interfaces";
+import { HOUR_IN_MS, SimulationProps, SimulationResult, SimulationType } from "./types";
 
+/**
+ * Simulation logic
+ */
 export class Simulation {
   private priceHandler: IPriceHandler;
   private consumptionHandler: IConsumptionHandler;
   private storage: IStorage;
+  private batteryPlanner: IBatteryPlanner;
 
   constructor(
     priceHandler: IPriceHandler,
     consumptionHandler: IConsumptionHandler,
+    batteryPlanner: IBatteryPlanner,
     storage: IStorage
   ) {
     this.priceHandler = priceHandler;
     this.consumptionHandler = consumptionHandler;
     this.storage = storage;
+    this.batteryPlanner = batteryPlanner;
   }
 
+  /**
+   * Starts simulation
+   * @param simulationProps properties for simulation
+   */
   start(simulationProps: SimulationProps): SimulationResult {
     const averagePrice = this.priceHandler.getAveragePrice();
     const hysteresis = (averagePrice * simulationProps.hysteresisChargeDischargePercent) / 100;
@@ -23,8 +33,6 @@ export class Simulation {
     const limitForDischarge = averagePrice + hysteresis;
 
     const supportedRange = this.priceHandler.getRange();
-
-    const hour = 1000 * 60 * 60; // in milliseconds
 
     if (simulationProps.simulationType === SimulationType.GRID_INVERTER) {
       this.storage.setConsumptionLimit(800);
@@ -38,49 +46,58 @@ export class Simulation {
     for (
       let current = supportedRange.from.getTime();
       current <= supportedRange.to.getTime();
-      current += hour
+      current += HOUR_IN_MS
     ) {
       const currentTime = new Date(current);
 
       const currentPrice = this.priceHandler.getPrice(currentTime);
-      const currentConsumptionWh = this.consumptionHandler.getConsumption(currentTime);
-      const currentConsumptionKwh = currentConsumptionWh / 1000;
-
-      const currentConsumptionWh800 = this.consumptionHandler.get800WConsumption(currentTime);
+      const consumptionData = this.consumptionHandler.getConsumption(currentTime);
+      const currentConsumptionKwh = consumptionData.consumptionWh / 1000;
 
       let paidPrice: number;
       const priceWithoutBatteryIncluded = currentConsumptionKwh * currentPrice;
 
-      if (currentPrice < limitForCharge) {
-        if (simulationProps.simulationType === SimulationType.STAND_ALONE_INVERTER) {
-          paidPrice = this.belowLowerLimitPriceStandAlone(
-            simulationProps,
-            currentConsumptionWh,
-            currentConsumptionKwh,
-            currentPrice
-          );
-        } else if (
-          simulationProps.simulationType === SimulationType.GRID_INVERTER ||
-          simulationProps.simulationType === SimulationType.STAND_ALONE_PLUS
-        ) {
-          paidPrice = this.belowLowerLimitPriceGridOrStandAlonePlus(
-            simulationProps,
-            currentConsumptionKwh,
-            currentPrice
-          );
+      if (
+        currentPrice < limitForCharge ||
+        this.batteryPlanner.getMinChargeWh(currentTime) < this.storage.getStateOfCharge()
+      ) {
+        // *********** CHARGE ****************
+        if (!consumptionData.isBlocked) {
+          if (simulationProps.simulationType === SimulationType.STAND_ALONE_INVERTER) {
+            paidPrice = this.belowLowerLimitPriceStandAlone(
+              simulationProps,
+              consumptionData.consumptionWh,
+              currentConsumptionKwh,
+              currentPrice
+            );
+          } else if (
+            simulationProps.simulationType === SimulationType.GRID_INVERTER ||
+            simulationProps.simulationType === SimulationType.STAND_ALONE_PLUS
+          ) {
+            paidPrice = this.belowLowerLimitPriceGridOrStandAlonePlus(
+              simulationProps,
+              currentConsumptionKwh,
+              currentPrice
+            );
+          } else {
+            throw "unsupported operation";
+          }
         } else {
-          throw "unsupported operation";
+          // no charging and discharging
+          paidPrice = priceWithoutBatteryIncluded;
         }
       } else if (currentPrice > limitForDischarge) {
+        // *********** DISCHARGE ****************
+
         if (
           simulationProps.simulationType === SimulationType.STAND_ALONE_INVERTER ||
           simulationProps.simulationType === SimulationType.STAND_ALONE_PLUS
         ) {
-          paidPrice = this.standAloneDischarge(currentConsumptionWh, currentPrice);
+          paidPrice = this.standAloneDischarge(consumptionData.consumptionWh, currentPrice);
         } else {
           const storageResult = this.storage.process(
             0,
-            currentConsumptionWh800 ?? currentConsumptionWh
+            consumptionData.consumptionWh800 ?? consumptionData.consumptionWh
           );
           const usedFromBatteryKwh =
             (storageResult.dischargedWh - storageResult.efficiencyLossWh) / 1000;
@@ -96,7 +113,7 @@ export class Simulation {
           paidPrice = priceWithoutBatteryIncluded;
         } else {
           // battery discharged
-          paidPrice = this.standAloneDischarge(currentConsumptionWh, currentPrice);
+          paidPrice = this.standAloneDischarge(consumptionData.consumptionWh, currentPrice);
         }
       }
 
