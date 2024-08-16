@@ -10,9 +10,9 @@ describe("Consumption", () => {
     const consumption2 = consumption.getConsumption(new Date("2024-06-01T18:12:45"));
     const consumption3 = consumption.getConsumption(new Date("2024-06-01T18:00:00"));
 
-    expect(consumption1).toBe(0);
-    expect(consumption2).toBe(950);
-    expect(consumption3).toBe(950);
+    expect(consumption1.consumptionWh).toBe(0);
+    expect(consumption2.consumptionWh).toBe(950);
+    expect(consumption3.consumptionWh).toBe(950);
   });
 
   it("Handles multiple consumptions correctly", async () => {
@@ -26,8 +26,8 @@ describe("Consumption", () => {
     const consumption2 = consumption.getConsumption(new Date("2024-06-01T18:12:45"));
     const consumption3 = consumption.getConsumption(new Date("2024-06-01T18:00:00"));
 
-    expect(consumption1).toBe(30);
-    expect(consumption2).toBe(980);
-    expect(consumption3).toBe(980);
+    expect(consumption1.consumptionWh).toBe(30);
+    expect(consumption2.consumptionWh).toBe(980);
+    expect(consumption3.consumptionWh).toBe(980);
   });
 });

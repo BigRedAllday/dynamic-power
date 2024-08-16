@@ -27,6 +27,8 @@ export class Simulation {
    * @param simulationProps properties for simulation
    */
   start(simulationProps: SimulationProps): SimulationResult {
+    console.log("Starting simulation... please wait until caches are filled");
+
     const averagePrice = this.priceHandler.getAveragePrice();
     const hysteresis = (averagePrice * simulationProps.hysteresisChargeDischargePercent) / 100;
     const limitForCharge = averagePrice - hysteresis;
@@ -83,8 +85,12 @@ export class Simulation {
             throw "unsupported operation";
           }
         } else {
-          // no charging and discharging
-          paidPrice = priceWithoutBatteryIncluded;
+          if (simulationProps.simulationType !== SimulationType.STAND_ALONE_INVERTER) {
+            // no charging and discharging
+            paidPrice = priceWithoutBatteryIncluded;
+          } else {
+            paidPrice = 0; // completely disconnected
+          }
         }
       } else if (currentPrice > limitForDischarge) {
         // *********** DISCHARGE ****************

@@ -18,7 +18,7 @@ describe("Simulation with storage integration", () => {
 
   const batteryPlanner: IBatteryPlanner = {
     getMinChargeWh: jest.fn()
-  }
+  };
 
   const storage = new Storage(1000, 80);
 
@@ -31,7 +31,9 @@ describe("Simulation with storage integration", () => {
     jest.resetAllMocks();
   });
 
-  function mockData(data: { price: number; consumption: number; consumption800?: number }[]) {
+  function mockData(
+    data: { price: number; consumption: number; consumption800?: number; blocked?: boolean }[]
+  ) {
     const someStartDate = new Date("2024-05-31T12:00:00.000Z");
     jest.spyOn(priceHandler, "getPrice").mockImplementation((date: Date) => {
       for (const [index, price] of data.map((d, i) => [i, d.price] as [number, number])) {
@@ -62,28 +64,24 @@ describe("Simulation with storage integration", () => {
     });
 
     jest.spyOn(consumptionHandler, "getConsumption").mockImplementation((date: Date) => {
-      for (const [index, consumption] of data.map(
-        (d, i) => [i, d.consumption] as [number, number]
+      for (const [index, consumption, consumption800, blocked] of data.map(
+        (d, i) =>
+          [i, d.consumption, d.consumption800, d.blocked] as [
+            number,
+            number,
+            number | undefined,
+            boolean | undefined
+          ]
       )) {
         const date1 = date.toISOString();
         const date2 = addHours(someStartDate, index).toISOString();
 
         if (date1 === date2) {
-          return consumption;
-        }
-      }
-      throw "no consumption value found";
-    });
-
-    jest.spyOn(consumptionHandler, "get800WConsumption").mockImplementation((date: Date) => {
-      for (const [index, consumption800] of data.map(
-        (d, i) => [i, d.consumption800] as [number, number]
-      )) {
-        const date1 = date.toISOString();
-        const date2 = addHours(someStartDate, index).toISOString();
-
-        if (date1 === date2) {
-          return consumption800;
+          return {
+            consumptionWh: consumption,
+            consumptionWh800: consumption800,
+            isBlocked: blocked
+          };
         }
       }
       throw "no consumption value found";
@@ -498,13 +496,23 @@ describe("Simulation with storage integration", () => {
 
       // run 1
       const storage1 = new Storage(400, 80);
-      const simulation1 = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage1);
+      const simulation1 = new Simulation(
+        priceHandler,
+        consumptionHandler,
+        batteryPlanner,
+        storage1
+      );
       storage1.process(200, 0);
       const result1 = simulation1.start(simulationProps);
       const diff1 = result1.totalCostsFixed - result1.totalCostsDynamic;
 
       const storage2 = new Storage(400, 20);
-      const simulation2 = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage2);
+      const simulation2 = new Simulation(
+        priceHandler,
+        consumptionHandler,
+        batteryPlanner,
+        storage2
+      );
       storage2.process(200, 0);
       const result2 = simulation2.start(simulationProps);
       const diff2 = result2.totalCostsFixed - result2.totalCostsDynamic;
@@ -512,4 +520,29 @@ describe("Simulation with storage integration", () => {
       expect(diff1).toBeGreaterThan(diff2);
     }
   );
+
+  it.each([false, true])("Do not charge when charging is blocked", async (isBlocked: boolean) => {
+    // add initial charge
+    storage.process(600, 0);
+
+    // average price:   0,5
+    mockData([
+      { price: 0.7, consumption: 200 }, // discharge                       Price: 0
+      { price: 0.3, consumption: 50, blocked: isBlocked } // charge      Price: 0.15 if not blocked
+    ]);
+
+    const simulationProps: SimulationProps = {
+      hysteresisChargeDischargePercent: 10,
+      chargePowerWatt: 500,
+      simulationType: SimulationType.STAND_ALONE_INVERTER,
+      fixedPrice: 0.5
+    };
+
+    const result = sut.start(simulationProps);
+    if (isBlocked) {
+      expect(result.totalCostsDynamic).toBe(0);
+    } else {
+      expect(result.totalCostsDynamic).toBeCloseTo(0.15, 3);
+    }
+  });
 });
