@@ -30,8 +30,12 @@ const START_HYSTERESIS = 0;
 const HYSTERESIS_STEPS = 10;
 const MAX_HYSTERESIS = 80;
 
-const CONSUMPTION_PRICE = 0.233;
-const EFFICIENCY_BATTERY = 90;
+const CONSUMPTION_PRICE = 0.233; // as of 2024-08-16
+const EFFICIENCY_BATTERY_PERCENT = 90;
+
+// as of 2024-08-16, added efficiency loss of battery since fixed prices do not use battery in current simulation logic
+// (but to compare with dynamic price including cars it is necessary)
+const FIXED_PRICE: number | undefined = 0.369 * (100 / EFFICIENCY_BATTERY_PERCENT);
 
 async function main() {
   const priceHandler = new PriceHandler(CONSUMPTION_PRICE);
@@ -68,13 +72,14 @@ async function main() {
       batteryPlanner.calculateMinCharges(chargePowerW, priceHandler.getRange());
     }
 
-    const storage = new Storage(storageSizeWh, EFFICIENCY_BATTERY);
+    const storage = new Storage(storageSizeWh, EFFICIENCY_BATTERY_PERCENT);
     const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
 
     const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: hysteresisDischargePercent,
       chargePowerWatt: chargePowerW,
-      simulationType: SIMULATION_TYPE
+      simulationType: SIMULATION_TYPE,
+      fixedPrice: FIXED_PRICE
     };
 
     const result = simulation.start(simulationProps);
@@ -110,12 +115,15 @@ async function main() {
   }
 
   console.log(" ");
-  console.log("BEST VALUE:");
+  console.log("BEST RESULT:");
   console.log(minPriceSimulationSummary);
 
   // plot best result
   if (minPriceSimulationSummary) {
-    const storage = new Storage(minPriceSimulationSummary.StorageSizeWh, EFFICIENCY_BATTERY);
+    const storage = new Storage(
+      minPriceSimulationSummary.StorageSizeWh,
+      EFFICIENCY_BATTERY_PERCENT
+    );
     const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
     const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: minPriceSimulationSummary.Hysteresis,

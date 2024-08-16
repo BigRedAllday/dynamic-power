@@ -1,5 +1,6 @@
 import { IBatteryPlanner, IConsumptionHandler } from "./interfaces";
 import { HOUR_IN_MS, TRange } from "./types";
+import { addHours } from "date-fns";
 
 /**
  * Calculates the minimum charge for the battery must have to survive (never discharge) a blocked timerange (with additional buffer)
@@ -39,6 +40,9 @@ export class BatteryPlanner implements IBatteryPlanner {
       }
       this.minChargeMap.set(currentTime.toISOString(), energyCurrentBlock);
     }
+
+    // Since simulation watches one hour into the future to "predict", we need this value as well
+    this.minChargeMap.set(addHours(range.to, 1).toISOString(), 0);
   }
 
   /**

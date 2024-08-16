@@ -1,6 +1,13 @@
 import { IBatteryPlanner, IConsumptionHandler, IPriceHandler, IStorage } from "./interfaces";
-import { HOUR_IN_MS, TSimulationProps, TSimulationResult, ESimulationType } from "./types";
+import {
+  HOUR_IN_MS,
+  TSimulationProps,
+  TSimulationResult,
+  ESimulationType,
+  TConsumptionData
+} from "./types";
 import * as fs from "fs";
+import { addHours } from "date-fns";
 
 /**
  * Simulation logic
@@ -61,10 +68,10 @@ export class Simulation {
       let paidPrice: number;
       const priceWithoutBatteryIncluded = currentConsumptionKwh * currentPrice;
 
-      if (
-        currentPrice < limitForCharge ||
-        this.batteryPlanner.getMinChargeWh(currentTime) < this.storage.getStateOfCharge()
-      ) {
+      // get min charge for next hour to be "prepared"
+      const minChargeNextHour = this.batteryPlanner.getMinChargeWh(addHours(currentTime, 1));
+
+      if (currentPrice < limitForCharge || minChargeNextHour > this.storage.getStateOfCharge()) {
         // *********** CHARGE ****************
         if (!consumptionData.isBlocked) {
           if (simulationProps.simulationType === ESimulationType.STAND_ALONE_INVERTER) {
@@ -92,6 +99,7 @@ export class Simulation {
             paidPrice = priceWithoutBatteryIncluded;
           } else {
             paidPrice = 0; // completely disconnected
+            this.storage.process(0, consumptionData.consumptionWh);
           }
         }
       } else if (currentPrice > limitForDischarge) {
@@ -122,27 +130,40 @@ export class Simulation {
         } else {
           // battery discharged
           paidPrice = this.standAloneDischarge(consumptionData.consumptionWh, currentPrice);
+          if (paidPrice > 0 && consumptionData.isBlocked) {
+            throw Error(
+              "Something went wrong. Prices in blocked areas must have been paid before."
+            );
+          }
         }
       }
+
+      const currentFixedPrice = simulationProps.fixedPrice
+        ? currentConsumptionKwh * simulationProps.fixedPrice
+        : priceWithoutBatteryIncluded;
 
       if (plot) {
         csvLines =
           csvLines +
-          `${currentTime.toISOString()};${consumptionData.consumptionWh};${currentPrice};${paidPrice};`;
-        csvLines = csvLines + `${consumptionData.isBlocked ? "blocked" : "unblocked"}\n`;
+          this.getCsvLine(
+            currentTime,
+            consumptionData,
+            currentPrice,
+            paidPrice,
+            currentFixedPrice,
+            limitForCharge,
+            limitForDischarge,
+            this.storage.getStateOfCharge(),
+            minChargeNextHour
+          );
       }
 
       dynamicPriceSum = dynamicPriceSum + paidPrice;
-      fixedPriceSum =
-        fixedPriceSum +
-        (simulationProps.fixedPrice
-          ? currentConsumptionKwh * simulationProps.fixedPrice
-          : priceWithoutBatteryIncluded);
+      fixedPriceSum = fixedPriceSum + currentFixedPrice;
     }
 
     if (plot) {
-      const header = "Time;ConsumptionWh;Current Price;Paid Price;Blocked\n";
-      fs.writeFileSync("plot.csv", header + csvLines, { flag: "w" });
+      fs.writeFileSync("plot.csv", this.getCsvHeader() + csvLines, { flag: "w" });
       console.log(`All values of best result logged into plot.csv`);
     }
 
@@ -200,5 +221,36 @@ export class Simulation {
     const storageResult = this.storage.process(0, currentConsumptionWh);
     const deficitKwh = storageResult.deficitWh / 1000;
     return deficitKwh * currentPrice;
+  }
+
+  private getCsvLine(
+    currentTime: Date,
+    consumptionData: TConsumptionData,
+    currentPrice: number,
+    paidPrice: number,
+    fixedPrice: number,
+    limitForCharge: number,
+    limitForDischarge: number,
+    stageOfCharge: number,
+    minCharge: number
+  ): string {
+    let csvLine = `${currentTime.toISOString()};`;
+    csvLine = csvLine + `${consumptionData.consumptionWh};`;
+    csvLine = csvLine + `${currentPrice.toFixed(3)};`;
+    csvLine = csvLine + `${paidPrice.toFixed(3)};`;
+    csvLine = csvLine + `${fixedPrice.toFixed(3)};`;
+    csvLine = csvLine + `${consumptionData.isBlocked ? "blocked" : "unblocked"};`;
+    csvLine = csvLine + `${limitForCharge.toFixed(3)};`;
+    csvLine = csvLine + `${limitForDischarge.toFixed(3)};`;
+    csvLine = csvLine + `${stageOfCharge.toFixed(3)};`;
+    csvLine = csvLine + `${minCharge.toFixed(3)};`;
+    csvLine = csvLine + "\n";
+    return csvLine;
+  }
+
+  getCsvHeader(): string {
+    let header = "Time;ConsumptionWh;Current Price;Paid Price;Fixed Price;";
+    header = header + "Blocked;Charge Limit;Discharge Limit;State of Charge;Required Charge\n";
+    return header;
   }
 }
