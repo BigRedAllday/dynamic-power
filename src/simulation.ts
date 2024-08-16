@@ -27,8 +27,6 @@ export class Simulation {
    * @param simulationProps properties for simulation
    */
   start(simulationProps: SimulationProps): SimulationResult {
-    console.log("Starting simulation... please wait until caches are filled");
-
     const averagePrice = this.priceHandler.getAveragePrice();
     const hysteresis = (averagePrice * simulationProps.hysteresisChargeDischargePercent) / 100;
     const limitForCharge = averagePrice - hysteresis;

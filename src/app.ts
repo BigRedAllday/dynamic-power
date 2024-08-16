@@ -8,25 +8,25 @@ import { BatteryPlanner } from "./batteryPlanner";
 
 const SIMULATION_TYPE = SimulationType.STAND_ALONE_INVERTER;
 const PROFILES = [
-  ConsumptionProfiles.TV,
-  ConsumptionProfiles.ROUTER,
-  ConsumptionProfiles.DISHWASHER
+  ConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
+  ConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_km,
+  ConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10km
 ];
 
-const START_CHARGE_POWER = 2000;
-const CHARGE_POWER_STEPS = 1000;
-const MAX_CHARGE_POWER = 10000;
+const START_CHARGE_POWER = 3500; // socket
+const CHARGE_POWER_STEPS = 7500;
+const MAX_CHARGE_POWER = 11000; // wallbox
 
-const START_STORAGE_SIZE = 500;
-const STORAGE_SIZE_STEPS = 1000;
-const MAX_STORAGE_SIZE = 10000;
+const START_STORAGE_SIZE = 20000;
+const STORAGE_SIZE_STEPS = 10000;
+const MAX_STORAGE_SIZE = 100000;
 
 const START_HYSTERESIS = 0;
 const HYSTERESIS_STEPS = 10;
 const MAX_HYSTERESIS = 80;
 
 const CONSUMPTION_PRICE = 0.233;
-const EFFICIENCY_BATTERY = 80;
+const EFFICIENCY_BATTERY = 90;
 
 async function main() {
   const priceHandler = new PriceHandler(CONSUMPTION_PRICE);
@@ -47,10 +47,17 @@ async function main() {
 
   console.log(`Average Price: ${priceHandler.getAveragePrice()}`);
 
+  console.log("Starting simulation... please wait until caches are filled");
+
   while (
-    chargePowerW <= MAX_CHARGE_POWER ||
-    storageSizeWh <= MAX_STORAGE_SIZE ||
-    hysteresisDischargePercent <= MAX_HYSTERESIS
+    (chargePowerW <= MAX_CHARGE_POWER ||
+      storageSizeWh <= MAX_STORAGE_SIZE ||
+      hysteresisDischargePercent <= MAX_HYSTERESIS) &&
+    !(
+      chargePowerW === MAX_CHARGE_POWER &&
+      storageSizeWh === MAX_STORAGE_SIZE &&
+      hysteresisDischargePercent === MAX_HYSTERESIS
+    )
   ) {
     if (hasBlockedAreas) {
       batteryPlanner.calculateMinCharges(chargePowerW, priceHandler.getRange());
@@ -85,12 +92,12 @@ async function main() {
 
     chargePowerW = chargePowerW + CHARGE_POWER_STEPS;
 
-    if (chargePowerW >= MAX_CHARGE_POWER) {
+    if (chargePowerW > MAX_CHARGE_POWER) {
       chargePowerW = START_CHARGE_POWER;
       storageSizeWh = storageSizeWh + STORAGE_SIZE_STEPS;
     }
 
-    if (storageSizeWh >= MAX_STORAGE_SIZE) {
+    if (storageSizeWh > MAX_STORAGE_SIZE) {
       storageSizeWh = START_STORAGE_SIZE;
       hysteresisDischargePercent = hysteresisDischargePercent + HYSTERESIS_STEPS;
     }

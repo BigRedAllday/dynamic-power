@@ -48,7 +48,7 @@ export class BatteryPlanner implements IBatteryPlanner {
   getMinChargeWh(date: Date): number {
     if (!this.hasBlockedAreas) {
       if (!this.infoReturned) {
-        console.log("Min Charge is deactivated");
+        console.log("Battery planner (min charge for blocked areas) is deactivated");
         this.infoReturned = true;
       }
       return 0;
