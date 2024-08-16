@@ -2,7 +2,7 @@ import fs from "fs";
 import { parse, startOfHour } from "date-fns";
 import { de } from "date-fns/locale";
 import { IPriceHandler } from "./interfaces";
-import { Range } from "./types";
+import { TRange } from "./types";
 
 /**
  * Handles energy prices
@@ -41,7 +41,7 @@ export class PriceHandler implements IPriceHandler {
   /**
    * Returns time range of energy prices
    */
-  getRange(): Range {
+  getRange(): TRange {
     const keys = Array.from(this.prices.keys());
     keys.sort();
 

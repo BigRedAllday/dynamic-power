@@ -1,10 +1,10 @@
 import { ConsumptionHandler } from "../src/consumption";
-import { ConsumptionProfiles } from "../src/types";
+import { EConsumptionProfiles } from "../src/types";
 
 describe("Consumption", () => {
   it("Handles single consumption correctly", async () => {
     const consumption = new ConsumptionHandler();
-    consumption.loadProfiles([ConsumptionProfiles.WASHING_MACHINE]);
+    consumption.loadProfiles([EConsumptionProfiles.WASHING_MACHINE]);
 
     const consumption1 = consumption.getConsumption(new Date("2024-05-31T09:12:45"));
     const consumption2 = consumption.getConsumption(new Date("2024-06-01T18:12:45"));
@@ -18,8 +18,8 @@ describe("Consumption", () => {
   it("Handles multiple consumptions correctly", async () => {
     const consumption = new ConsumptionHandler();
     consumption.loadProfiles([
-      ConsumptionProfiles.WASHING_MACHINE,
-      ConsumptionProfiles.REFRIGERATOR
+      EConsumptionProfiles.WASHING_MACHINE,
+      EConsumptionProfiles.REFRIGERATOR
     ]);
 
     const consumption1 = consumption.getConsumption(new Date("2024-05-31T09:12:45"));

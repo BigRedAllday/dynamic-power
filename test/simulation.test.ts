@@ -1,7 +1,7 @@
 import { Simulation } from "../src/simulation";
 import { IBatteryPlanner, IConsumptionHandler, IPriceHandler } from "../src/interfaces";
 import { Storage } from "../src/storage";
-import { SimulationProps, SimulationType } from "../src/types";
+import { TSimulationProps, ESimulationType } from "../src/types";
 import { addHours } from "date-fns";
 
 describe("Simulation with storage integration", () => {
@@ -105,10 +105,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.2, consumption: 200 } // charge       Price: 0.06     Charge: 599
     ]); //              Sum: 0.271
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 100,
-      simulationType: SimulationType.GRID_INVERTER,
+      simulationType: ESimulationType.GRID_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -136,10 +136,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.2, consumption: 200 } // charge       Price: 0.06     Charge: 409
     ]); //                                              Sum: 0.174
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 100,
-      simulationType: SimulationType.STAND_ALONE_PLUS,
+      simulationType: ESimulationType.STAND_ALONE_PLUS,
       fixedPrice: 0.5
     };
 
@@ -167,10 +167,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.2, consumption: 200 } // charge       Price: 0.02    Charge: 96
     ]); //              Sum: 0.08
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 100,
-      simulationType: SimulationType.STAND_ALONE_INVERTER,
+      simulationType: ESimulationType.STAND_ALONE_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -194,10 +194,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.7, consumption: 50 } // discharge                    Price: 0        Charge: 945
     ]); //                                                            Sum: 0.101
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 200,
-      simulationType: SimulationType.GRID_INVERTER,
+      simulationType: ESimulationType.GRID_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -221,10 +221,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.7, consumption: 50 } // discharge                     Price: 0        Charge: 879
     ]); //                              Sum: 0.071
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 200,
-      simulationType: SimulationType.STAND_ALONE_PLUS,
+      simulationType: ESimulationType.STAND_ALONE_PLUS,
       fixedPrice: 0.5
     };
 
@@ -248,10 +248,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.7, consumption: 50 } // discharge                     Price: 0         Charge: 879
     ]); //                                                             Sum: 0.059
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 200,
-      simulationType: SimulationType.STAND_ALONE_INVERTER,
+      simulationType: ESimulationType.STAND_ALONE_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -276,10 +276,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.3, consumption: 50 } // charge                          Price: 0.045   Charge: 90
     ]); //                                                                  Sum: 0.145
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 100,
-      simulationType: SimulationType.GRID_INVERTER,
+      simulationType: ESimulationType.GRID_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -303,10 +303,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.3, consumption: 50 } // charge                          Price: 0.045    Charge: 100
     ]); //                                                                  Sum: 0.145
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 100,
-      simulationType: SimulationType.STAND_ALONE_PLUS,
+      simulationType: ESimulationType.STAND_ALONE_PLUS,
       fixedPrice: 0.5
     };
 
@@ -330,10 +330,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.3, consumption: 50 } // charge                          Price: 0.03    Charge: 40
     ]); //                                 Sum: 0.13
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 100,
-      simulationType: SimulationType.STAND_ALONE_INVERTER,
+      simulationType: ESimulationType.STAND_ALONE_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -353,10 +353,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.7, consumption: 1000 } // discharge        Price: 0.14     Charge: 120
     ]); //                  Sum: 0.173
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 200,
-      simulationType: SimulationType.GRID_INVERTER,
+      simulationType: ESimulationType.GRID_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -366,9 +366,9 @@ describe("Simulation with storage integration", () => {
     expect(result.maximumCharge).toBe(1000);
   });
 
-  it.each([SimulationType.STAND_ALONE_PLUS, SimulationType.STAND_ALONE_INVERTER])(
+  it.each([ESimulationType.STAND_ALONE_PLUS, ESimulationType.STAND_ALONE_INVERTER])(
     "No limitation for STAND_ALONE inverters",
-    async (simulationType: SimulationType) => {
+    async (simulationType: ESimulationType) => {
       // add initial charge
       storage.process(1000, 0);
 
@@ -378,7 +378,7 @@ describe("Simulation with storage integration", () => {
         { price: 0.7, consumption: 820 } // discharge        Price: 0       Charge: 98
       ]); //                                                Sum: 0.033
 
-      const simulationProps: SimulationProps = {
+      const simulationProps: TSimulationProps = {
         hysteresisChargeDischargePercent: 20,
         chargePowerWatt: 200,
         simulationType: simulationType,
@@ -402,10 +402,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.7, consumption: 200, consumption800: 100 } // discharge        Price: 0.07    Charge: 890
     ]); //                  Sum: 0.103
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 200,
-      simulationType: SimulationType.GRID_INVERTER,
+      simulationType: ESimulationType.GRID_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -429,10 +429,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.3, consumption: 50, consumption800: 50 } // charge                          Price: 0.045
     ]); //                                                                                       Sum: 0.201
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 20,
       chargePowerWatt: 100,
-      simulationType: SimulationType.GRID_INVERTER,
+      simulationType: ESimulationType.GRID_INVERTER,
       fixedPrice: 0.5
     };
 
@@ -442,9 +442,9 @@ describe("Simulation with storage integration", () => {
     expect(result.minimumCharge).toBe(0);
   });
 
-  it.each([SimulationType.STAND_ALONE_PLUS, SimulationType.STAND_ALONE_INVERTER])(
+  it.each([ESimulationType.STAND_ALONE_PLUS, ESimulationType.STAND_ALONE_INVERTER])(
     "STAND_ALONE inverters ignore 800 Watt values",
-    async (simulationType: SimulationType) => {
+    async (simulationType: ESimulationType) => {
       // add initial charge (540)
       storage.process(600, 0); // activate calculation of min charge
 
@@ -454,7 +454,7 @@ describe("Simulation with storage integration", () => {
         { price: 0.7, consumption: 200, consumption800: 50 } // discharge        Price: 0       Charge: 410
       ]); //                  Sum: 0.03
 
-      const simulationProps: SimulationProps = {
+      const simulationProps: TSimulationProps = {
         hysteresisChargeDischargePercent: 20,
         chargePowerWatt: 100,
         simulationType: simulationType,
@@ -469,12 +469,12 @@ describe("Simulation with storage integration", () => {
   );
 
   it.each([
-    SimulationType.STAND_ALONE_PLUS,
-    SimulationType.STAND_ALONE_INVERTER,
-    SimulationType.GRID_INVERTER
+    ESimulationType.STAND_ALONE_PLUS,
+    ESimulationType.STAND_ALONE_INVERTER,
+    ESimulationType.GRID_INVERTER
   ])(
     "difference between fixed price and dynamic price should be much lower on low efficiency",
-    (simulationType: SimulationType) => {
+    (simulationType: ESimulationType) => {
       // average price:   0,4375 (upper limit: 0.525, lowerLimit: 0,35)
       // total wh:        700 Wh
       mockData([
@@ -488,7 +488,7 @@ describe("Simulation with storage integration", () => {
         { price: 0.2, consumption: 200 }
       ]);
 
-      const simulationProps: SimulationProps = {
+      const simulationProps: TSimulationProps = {
         hysteresisChargeDischargePercent: 20,
         chargePowerWatt: 200,
         simulationType: simulationType
@@ -531,10 +531,10 @@ describe("Simulation with storage integration", () => {
       { price: 0.3, consumption: 50, blocked: isBlocked } // charge      Price: 0.15 if not blocked
     ]);
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: 10,
       chargePowerWatt: 500,
-      simulationType: SimulationType.STAND_ALONE_INVERTER,
+      simulationType: ESimulationType.STAND_ALONE_INVERTER,
       fixedPrice: 0.5
     };
 

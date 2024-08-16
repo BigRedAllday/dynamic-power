@@ -8,7 +8,7 @@ export type TStorageProcessResult = {
   newBatteryChargeWh: number;
 };
 
-export enum ConsumptionProfiles {
+export enum EConsumptionProfiles {
   REFRIGERATOR = "fridge.csv",
   WASHING_MACHINE = "washing_machine.csv",
   ROUTER = "router.csv",
@@ -28,33 +28,43 @@ export enum ConsumptionProfiles {
 
 export const HOUR_IN_MS = 1000 * 60 * 60;
 
-export enum SimulationType {
+export enum ESimulationType {
   STAND_ALONE_INVERTER,
   GRID_INVERTER,
   STAND_ALONE_PLUS
 }
 
-export type SimulationProps = {
+export type TSimulationProps = {
   hysteresisChargeDischargePercent: number;
   chargePowerWatt: number;
-  simulationType: SimulationType;
+  simulationType: ESimulationType;
   fixedPrice?: number;
 };
 
-export type Range = {
+export type TRange = {
   from: Date;
   to: Date;
 };
 
-export type SimulationResult = {
+export type TSimulationResult = {
   totalCostsDynamic: number;
   totalCostsFixed: number;
   minimumCharge: number | undefined;
   maximumCharge: number;
 };
 
-export type ConsumptionData = {
+export type TConsumptionData = {
   consumptionWh: number;
   consumptionWh800?: number;
   isBlocked?: boolean;
+};
+
+export type TSimulationSummary = {
+  StorageSizeWh: number;
+  ChargePowerW: number;
+  Hysteresis: number;
+  StorageMin: string | undefined;
+  StorageMax: string;
+  DynamicPrice: string;
+  FixedPrice: string;
 };

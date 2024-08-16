@@ -1,4 +1,4 @@
-import { ConsumptionData, TStorageProcessResult } from "./types";
+import { TConsumptionData, TStorageProcessResult } from "./types";
 
 export interface IPriceHandler {
   getAveragePrice(): number;
@@ -7,7 +7,7 @@ export interface IPriceHandler {
 }
 
 export interface IConsumptionHandler {
-  getConsumption(date: Date): ConsumptionData;
+  getConsumption(date: Date): TConsumptionData;
 }
 
 export interface IBatteryPlanner {

@@ -1,10 +1,10 @@
 import fs from "fs";
 import { IConsumptionHandler } from "./interfaces";
-import { ConsumptionData, ConsumptionProfiles } from "./types";
+import { TConsumptionData, EConsumptionProfiles } from "./types";
 import Holidays from "date-holidays";
 
 export class ConsumptionHandler implements IConsumptionHandler {
-  private consumptionMap: Map<string, ConsumptionData> = new Map();
+  private consumptionMap: Map<string, TConsumptionData> = new Map();
   private holidays: Holidays;
   private holidayCache: Map<string, boolean>;
 
@@ -17,7 +17,7 @@ export class ConsumptionHandler implements IConsumptionHandler {
    * Load profiles and make the available
    * @param profiles one or more profiles
    */
-  loadProfiles(profiles: ConsumptionProfiles[]) {
+  loadProfiles(profiles: EConsumptionProfiles[]) {
     this.consumptionMap.clear();
 
     for (const profile of profiles) {
@@ -44,7 +44,7 @@ export class ConsumptionHandler implements IConsumptionHandler {
           this.setBlockedOr800WhValue(value800WOrBlocked, currentValue);
           this.consumptionMap.set(key, currentValue);
         } else {
-          const consumptionData: ConsumptionData = {
+          const consumptionData: TConsumptionData = {
             consumptionWh: value
           };
           this.setBlockedOr800WhValue(value800WOrBlocked, consumptionData);
@@ -58,7 +58,7 @@ export class ConsumptionHandler implements IConsumptionHandler {
    * Get consumption for a special date (using local time)
    * @param date
    */
-  getConsumption(date: Date): ConsumptionData {
+  getConsumption(date: Date): TConsumptionData {
     const key = this.getDayOfWeek(date) + date.getHours();
     const consumption = this.consumptionMap.get(key);
     if (consumption === undefined) {
@@ -76,7 +76,7 @@ export class ConsumptionHandler implements IConsumptionHandler {
 
   private setBlockedOr800WhValue(
     value800WOrBlocked: string | undefined,
-    currentValue: ConsumptionData
+    currentValue: TConsumptionData
   ) {
     if (value800WOrBlocked === "blocked") {
       // if some of the profiles are blocked, this counts for every profile

@@ -1,5 +1,6 @@
 import { IBatteryPlanner, IConsumptionHandler, IPriceHandler, IStorage } from "./interfaces";
-import { HOUR_IN_MS, SimulationProps, SimulationResult, SimulationType } from "./types";
+import { HOUR_IN_MS, TSimulationProps, TSimulationResult, ESimulationType } from "./types";
+import * as fs from "fs";
 
 /**
  * Simulation logic
@@ -25,8 +26,9 @@ export class Simulation {
   /**
    * Starts simulation
    * @param simulationProps properties for simulation
+   * @param plot plot results in csv file
    */
-  start(simulationProps: SimulationProps): SimulationResult {
+  start(simulationProps: TSimulationProps, plot?: boolean): TSimulationResult {
     const averagePrice = this.priceHandler.getAveragePrice();
     const hysteresis = (averagePrice * simulationProps.hysteresisChargeDischargePercent) / 100;
     const limitForCharge = averagePrice - hysteresis;
@@ -34,7 +36,7 @@ export class Simulation {
 
     const supportedRange = this.priceHandler.getRange();
 
-    if (simulationProps.simulationType === SimulationType.GRID_INVERTER) {
+    if (simulationProps.simulationType === ESimulationType.GRID_INVERTER) {
       this.storage.setConsumptionLimit(800);
     } else {
       this.storage.resetConsumptionLimit();
@@ -42,6 +44,8 @@ export class Simulation {
 
     let dynamicPriceSum = 0;
     let fixedPriceSum = 0;
+
+    let csvLines: string = "";
 
     for (
       let current = supportedRange.from.getTime();
@@ -63,7 +67,7 @@ export class Simulation {
       ) {
         // *********** CHARGE ****************
         if (!consumptionData.isBlocked) {
-          if (simulationProps.simulationType === SimulationType.STAND_ALONE_INVERTER) {
+          if (simulationProps.simulationType === ESimulationType.STAND_ALONE_INVERTER) {
             paidPrice = this.belowLowerLimitPriceStandAlone(
               simulationProps,
               consumptionData.consumptionWh,
@@ -71,8 +75,8 @@ export class Simulation {
               currentPrice
             );
           } else if (
-            simulationProps.simulationType === SimulationType.GRID_INVERTER ||
-            simulationProps.simulationType === SimulationType.STAND_ALONE_PLUS
+            simulationProps.simulationType === ESimulationType.GRID_INVERTER ||
+            simulationProps.simulationType === ESimulationType.STAND_ALONE_PLUS
           ) {
             paidPrice = this.belowLowerLimitPriceGridOrStandAlonePlus(
               simulationProps,
@@ -83,7 +87,7 @@ export class Simulation {
             throw "unsupported operation";
           }
         } else {
-          if (simulationProps.simulationType !== SimulationType.STAND_ALONE_INVERTER) {
+          if (simulationProps.simulationType !== ESimulationType.STAND_ALONE_INVERTER) {
             // no charging and discharging
             paidPrice = priceWithoutBatteryIncluded;
           } else {
@@ -94,8 +98,8 @@ export class Simulation {
         // *********** DISCHARGE ****************
 
         if (
-          simulationProps.simulationType === SimulationType.STAND_ALONE_INVERTER ||
-          simulationProps.simulationType === SimulationType.STAND_ALONE_PLUS
+          simulationProps.simulationType === ESimulationType.STAND_ALONE_INVERTER ||
+          simulationProps.simulationType === ESimulationType.STAND_ALONE_PLUS
         ) {
           paidPrice = this.standAloneDischarge(consumptionData.consumptionWh, currentPrice);
         } else {
@@ -112,7 +116,7 @@ export class Simulation {
           throw `paid price must be equal or less the value without battery (${paidPrice} vs ${priceWithoutBatteryIncluded})`;
         }
       } else {
-        if (simulationProps.simulationType === SimulationType.GRID_INVERTER) {
+        if (simulationProps.simulationType === ESimulationType.GRID_INVERTER) {
           // no charging and discharging
           paidPrice = priceWithoutBatteryIncluded;
         } else {
@@ -121,12 +125,25 @@ export class Simulation {
         }
       }
 
+      if (plot) {
+        csvLines =
+          csvLines +
+          `${currentTime.toISOString()};${consumptionData.consumptionWh};${currentPrice};${paidPrice};`;
+        csvLines = csvLines + `${consumptionData.isBlocked ? "blocked" : "unblocked"}\n`;
+      }
+
       dynamicPriceSum = dynamicPriceSum + paidPrice;
       fixedPriceSum =
         fixedPriceSum +
         (simulationProps.fixedPrice
           ? currentConsumptionKwh * simulationProps.fixedPrice
           : priceWithoutBatteryIncluded);
+    }
+
+    if (plot) {
+      const header = "Time;ConsumptionWh;Current Price;Paid Price;Blocked\n";
+      fs.writeFileSync("plot.csv", header + csvLines, { flag: "w" });
+      console.log(`All values of best result logged into plot.csv`);
     }
 
     return {
@@ -138,7 +155,7 @@ export class Simulation {
   }
 
   private belowLowerLimitPriceStandAlone(
-    simulationProps: SimulationProps,
+    simulationProps: TSimulationProps,
     currentConsumptionWh: number,
     currentConsumptionKwh: number,
     currentPrice: number
@@ -165,7 +182,7 @@ export class Simulation {
   }
 
   private belowLowerLimitPriceGridOrStandAlonePlus(
-    simulationProps: SimulationProps,
+    simulationProps: TSimulationProps,
     currentConsumptionKwh: number,
     currentPrice: number
   ) {

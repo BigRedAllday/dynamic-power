@@ -1,6 +1,6 @@
 import { BatteryPlanner } from "../src/batteryPlanner";
 import { ConsumptionHandler } from "../src/consumption";
-import { ConsumptionProfiles } from "../src/types";
+import { EConsumptionProfiles } from "../src/types";
 
 describe("Battery Planner", () => {
   let batteryPlanner: BatteryPlanner;
@@ -17,7 +17,7 @@ describe("Battery Planner", () => {
     };
 
     const chargePower = 1000;
-    consumptionHandler.loadProfiles([ConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_km]);
+    consumptionHandler.loadProfiles([EConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_km]);
     batteryPlanner.calculateMinCharges(chargePower, testTimeRange);
 
     const hs23 = batteryPlanner.getMinChargeWh(new Date("2023-11-26T22:00:00.000Z"));
@@ -79,8 +79,8 @@ describe("Battery Planner", () => {
 
     const chargePower = 1000;
     consumptionHandler.loadProfiles([
-      ConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
-      ConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10km
+      EConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
+      EConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10km
     ]);
     batteryPlanner.calculateMinCharges(chargePower, testTimeRange);
 
@@ -142,7 +142,7 @@ describe("Battery Planner", () => {
     };
 
     const chargePower = 1000;
-    consumptionHandler.loadProfiles([ConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM]);
+    consumptionHandler.loadProfiles([EConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM]);
     batteryPlanner.calculateMinCharges(chargePower, testTimeRange);
 
     const date = new Date("2023-09-24T05:00:00.000Z");
@@ -158,7 +158,7 @@ describe("Battery Planner", () => {
     };
 
     const chargePower = 1000;
-    consumptionHandler.loadProfiles([ConsumptionProfiles.REFRIGERATOR]);
+    consumptionHandler.loadProfiles([EConsumptionProfiles.REFRIGERATOR]);
     batteryPlanner.calculateMinCharges(chargePower, testTimeRange);
 
     // wrong time, but no matter, since there are no blocked times

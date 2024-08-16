@@ -3,14 +3,19 @@ import { ConsumptionHandler } from "./consumption";
 import { Simulation } from "./simulation";
 import { Storage } from "./storage";
 import * as console from "console";
-import { ConsumptionProfiles, SimulationProps, SimulationType } from "./types";
+import {
+  EConsumptionProfiles,
+  TSimulationProps,
+  TSimulationSummary,
+  ESimulationType
+} from "./types";
 import { BatteryPlanner } from "./batteryPlanner";
 
-const SIMULATION_TYPE = SimulationType.STAND_ALONE_INVERTER;
+const SIMULATION_TYPE = ESimulationType.STAND_ALONE_INVERTER;
 const PROFILES = [
-  ConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
-  ConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_km,
-  ConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10km
+  EConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
+  EConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_km,
+  EConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10km
 ];
 
 const START_CHARGE_POWER = 3500; // socket
@@ -43,7 +48,7 @@ async function main() {
   let hysteresisDischargePercent = START_HYSTERESIS;
 
   let minPrice: number | undefined;
-  let minPriceMetadata = "no data";
+  let minPriceSimulationSummary: TSimulationSummary | undefined;
 
   console.log(`Average Price: ${priceHandler.getAveragePrice()}`);
 
@@ -64,10 +69,9 @@ async function main() {
     }
 
     const storage = new Storage(storageSizeWh, EFFICIENCY_BATTERY);
-
     const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: hysteresisDischargePercent,
       chargePowerWatt: chargePowerW,
       simulationType: SIMULATION_TYPE
@@ -75,19 +79,21 @@ async function main() {
 
     const result = simulation.start(simulationProps);
 
-    let resultString = `Storage-Size: ${storageSizeWh} - `;
-    resultString += `Charge-Power: ${chargePowerW} - `;
-    resultString += `Hysteresis: ${hysteresisDischargePercent}% - `;
-    resultString += `Storage Min: ${storage.getMinimumCharge()?.toFixed(0)} - `;
-    resultString += `Storage Max: ${storage.getMaximumCharge().toFixed(0)} - `;
-    resultString += `Dynamic: ${result.totalCostsDynamic.toFixed(2)} - `;
-    resultString += `Fixed: ${result.totalCostsFixed.toFixed(2)}`;
+    const simulationSummary: TSimulationSummary = {
+      StorageSizeWh: storageSizeWh,
+      ChargePowerW: chargePowerW,
+      Hysteresis: hysteresisDischargePercent,
+      StorageMin: storage.getMinimumCharge()?.toFixed(0),
+      StorageMax: storage.getMaximumCharge().toFixed(0),
+      DynamicPrice: result.totalCostsDynamic.toFixed(2),
+      FixedPrice: result.totalCostsFixed.toFixed(2)
+    };
 
-    console.log(resultString);
+    console.log(JSON.stringify(simulationSummary));
 
     if (minPrice === undefined || minPrice > result.totalCostsDynamic) {
       minPrice = result.totalCostsDynamic;
-      minPriceMetadata = resultString;
+      minPriceSimulationSummary = simulationSummary;
     }
 
     chargePowerW = chargePowerW + CHARGE_POWER_STEPS;
@@ -105,7 +111,20 @@ async function main() {
 
   console.log(" ");
   console.log("BEST VALUE:");
-  console.log(minPriceMetadata);
+  console.log(minPriceSimulationSummary);
+
+  // plot best result
+  if (minPriceSimulationSummary) {
+    const storage = new Storage(minPriceSimulationSummary.StorageSizeWh, EFFICIENCY_BATTERY);
+    const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
+    const simulationProps: TSimulationProps = {
+      hysteresisChargeDischargePercent: minPriceSimulationSummary.Hysteresis,
+      chargePowerWatt: minPriceSimulationSummary.ChargePowerW,
+      simulationType: SIMULATION_TYPE
+    };
+
+    simulation.start(simulationProps, true);
+  }
 }
 
 //Invoke the main function

@@ -1,5 +1,5 @@
 import { IBatteryPlanner, IConsumptionHandler } from "./interfaces";
-import { HOUR_IN_MS, Range } from "./types";
+import { HOUR_IN_MS, TRange } from "./types";
 
 /**
  * Calculates the minimum charge for the battery must have to survive (never discharge) a blocked timerange (with additional buffer)
@@ -17,7 +17,7 @@ export class BatteryPlanner implements IBatteryPlanner {
    * @param chargePowerWatt Power the battery can be charged with
    * @param range Time range
    */
-  calculateMinCharges(chargePowerWatt: number, range: Range) {
+  calculateMinCharges(chargePowerWatt: number, range: TRange) {
     this.minChargeMap.clear();
 
     let energyCurrentBlock = 0;
