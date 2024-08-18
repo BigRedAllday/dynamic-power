@@ -33,8 +33,10 @@ const MAX_HYSTERESIS = 80;
 const CONSUMPTION_PRICE = 0.233; // as of 2024-08-16
 const EFFICIENCY_BATTERY_PERCENT = 90;
 
-// as of 2024-08-16, added efficiency loss of battery since fixed prices do not use battery in current simulation logic
-// (but to compare with dynamic price including cars it is necessary)
+// added efficiency loss of battery since fixed prices do not use battery in current simulation logic
+// "Fixed Price" is used as reference without battery for now, but in cars we cannot avoid batteries
+// Maye this issue will be fixed in future releases
+// 0.369 is current electricity price of Hamburg`s electricity provider (as of 2024-08-16)
 const FIXED_PRICE: number | undefined = 0.369 * (100 / EFFICIENCY_BATTERY_PERCENT);
 
 async function main() {
