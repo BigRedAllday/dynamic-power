@@ -17,7 +17,7 @@ describe("Battery Planner", () => {
     };
 
     const chargePower = 1000;
-    consumptionHandler.loadProfiles([EConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_km]);
+    consumptionHandler.loadProfiles([EConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_KM]);
     batteryPlanner.calculateMinCharges(chargePower, testTimeRange);
 
     const hs23 = batteryPlanner.getMinChargeWh(new Date("2023-11-26T22:00:00.000Z"));
@@ -80,7 +80,7 @@ describe("Battery Planner", () => {
     const chargePower = 1000;
     consumptionHandler.loadProfiles([
       EConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
-      EConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10km
+      EConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10KM
     ]);
     batteryPlanner.calculateMinCharges(chargePower, testTimeRange);
 

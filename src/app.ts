@@ -14,8 +14,8 @@ import { BatteryPlanner } from "./batteryPlanner";
 const SIMULATION_TYPE = ESimulationType.STAND_ALONE_INVERTER;
 const PROFILES = [
   EConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
-  EConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_km,
-  EConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10km
+  EConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_KM,
+  EConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10KM
 ];
 
 const START_CHARGE_POWER = 3500; // socket
@@ -65,9 +65,9 @@ async function main() {
       storageSizeWh <= MAX_STORAGE_SIZE ||
       hysteresisDischargePercent <= MAX_HYSTERESIS) &&
     !(
-      chargePowerW === MAX_CHARGE_POWER &&
-      storageSizeWh === MAX_STORAGE_SIZE &&
-      hysteresisDischargePercent === MAX_HYSTERESIS
+      chargePowerW >= MAX_CHARGE_POWER &&
+      storageSizeWh >= MAX_STORAGE_SIZE &&
+      hysteresisDischargePercent >= MAX_HYSTERESIS
     )
   ) {
     if (hasBlockedAreas) {
