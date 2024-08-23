@@ -2,86 +2,139 @@ import { PriceHandler } from "./price";
 import { ConsumptionHandler } from "./consumption";
 import { Simulation } from "./simulation";
 import { Storage } from "./storage";
-import console from "console";
-import { ConsumptionProfiles, SimulationProps, SimulationType } from "./types";
+import * as console from "console";
+import {
+  EConsumptionProfiles,
+  TSimulationProps,
+  TSimulationSummary,
+  ESimulationType
+} from "./types";
+import { BatteryPlanner } from "./batteryPlanner";
 
-const SIMULATION_TYPE = SimulationType.STAND_ALONE_INVERTER;
+const SIMULATION_TYPE = ESimulationType.STAND_ALONE_INVERTER;
+const PROFILES = [
+  EConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
+  EConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_KM,
+  EConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10KM
+];
+
+const START_CHARGE_POWER = 3500; // socket
+const CHARGE_POWER_STEPS = 7500;
+const MAX_CHARGE_POWER = 11000; // wallbox
+
+const START_STORAGE_SIZE = 20000;
+const STORAGE_SIZE_STEPS = 10000;
+const MAX_STORAGE_SIZE = 100000;
+
+const START_HYSTERESIS = 0;
+const HYSTERESIS_STEPS = 10;
+const MAX_HYSTERESIS = 80;
+
+const CONSUMPTION_PRICE = 0.233; // as of 2024-08-16
+const EFFICIENCY_BATTERY_PERCENT = 90;
+
+// added efficiency loss of battery since fixed prices do not use battery in current simulation logic
+// "Fixed Price" is used as reference without battery for now, but in cars we cannot avoid batteries
+// Maye this issue will be fixed in future releases
+// 0.369 is current electricity price of Hamburg`s electricity provider (as of 2024-08-16)
+const FIXED_PRICE: number | undefined = 0.369 * (100 / EFFICIENCY_BATTERY_PERCENT);
 
 async function main() {
-  const priceHandler = new PriceHandler(0.233);
+  const priceHandler = new PriceHandler(CONSUMPTION_PRICE);
   priceHandler.loadPriceTable();
 
   const consumptionHandler = new ConsumptionHandler();
-  consumptionHandler.loadProfiles([ConsumptionProfiles.REFRIGERATOR]);
+  consumptionHandler.loadProfiles(PROFILES);
+  const hasBlockedAreas = consumptionHandler.hasBlockedAreas();
 
-  let chargePowerW = 100;
-  let storageSizeWh = 500;
-  let hysteresisDischargePercent = 0;
+  const batteryPlanner = new BatteryPlanner(consumptionHandler);
+
+  let chargePowerW = START_CHARGE_POWER;
+  let storageSizeWh = START_STORAGE_SIZE;
+  let hysteresisDischargePercent = START_HYSTERESIS;
 
   let minPrice: number | undefined;
-  let minPriceMetadata = "no data";
+  let minPriceSimulationSummary: TSimulationSummary | undefined;
 
-  let minPrice2kwStorage: number | undefined;
-  let minPrice2KwStorageMetadata = "no data";
+  console.log(`Average Price: ${priceHandler.getAveragePrice()}`);
 
-  console.log("Average Price: " + priceHandler.getAveragePrice());
+  console.log("Starting simulation... please wait until caches are filled");
 
-  while (chargePowerW !== 1000 || storageSizeWh !== 10000 || hysteresisDischargePercent !== 80) {
-    const storage = new Storage(storageSizeWh, 80);
+  while (
+    (chargePowerW <= MAX_CHARGE_POWER ||
+      storageSizeWh <= MAX_STORAGE_SIZE ||
+      hysteresisDischargePercent <= MAX_HYSTERESIS) &&
+    !(
+      chargePowerW >= MAX_CHARGE_POWER &&
+      storageSizeWh >= MAX_STORAGE_SIZE &&
+      hysteresisDischargePercent >= MAX_HYSTERESIS
+    )
+  ) {
+    if (hasBlockedAreas) {
+      batteryPlanner.calculateMinCharges(chargePowerW, priceHandler.getRange());
+    }
 
-    const simulation = new Simulation(priceHandler, consumptionHandler, storage);
+    const storage = new Storage(storageSizeWh, EFFICIENCY_BATTERY_PERCENT);
+    const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
 
-    const simulationProps: SimulationProps = {
+    const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: hysteresisDischargePercent,
       chargePowerWatt: chargePowerW,
-      simulationType: SIMULATION_TYPE
+      simulationType: SIMULATION_TYPE,
+      fixedPrice: FIXED_PRICE
     };
 
     const result = simulation.start(simulationProps);
 
-    let resultString = `Storage-Size: ${storageSizeWh} - `;
-    resultString += `Charge-Power: ${chargePowerW} - `;
-    resultString += `Hysteresis: ${hysteresisDischargePercent}% - `;
-    resultString += `Storage Min: ${storage.getMinimumCharge()?.toFixed(0)} - `;
-    resultString += `Storage Max: ${storage.getMaximumCharge().toFixed(0)} - `;
-    resultString += `Dynamic: ${result.totalCostsDynamic.toFixed(2)} - `;
-    resultString += `Fixed: ${result.totalCostsFixed.toFixed(2)}`;
+    const simulationSummary: TSimulationSummary = {
+      StorageSizeWh: storageSizeWh,
+      ChargePowerW: chargePowerW,
+      Hysteresis: hysteresisDischargePercent,
+      StorageMin: storage.getMinimumCharge()?.toFixed(0),
+      StorageMax: storage.getMaximumCharge().toFixed(0),
+      DynamicPrice: result.totalCostsDynamic.toFixed(2),
+      FixedPrice: result.totalCostsFixed.toFixed(2)
+    };
 
-    console.log(resultString);
+    console.log(JSON.stringify(simulationSummary));
 
     if (minPrice === undefined || minPrice > result.totalCostsDynamic) {
       minPrice = result.totalCostsDynamic;
-      minPriceMetadata = resultString;
+      minPriceSimulationSummary = simulationSummary;
     }
 
-    if (
-      storageSizeWh === 2000 &&
-      (minPrice2kwStorage === undefined || minPrice2kwStorage > result.totalCostsDynamic)
-    ) {
-      minPrice2kwStorage = result.totalCostsDynamic;
-      minPrice2KwStorageMetadata = resultString;
+    chargePowerW = chargePowerW + CHARGE_POWER_STEPS;
+
+    if (chargePowerW > MAX_CHARGE_POWER) {
+      chargePowerW = START_CHARGE_POWER;
+      storageSizeWh = storageSizeWh + STORAGE_SIZE_STEPS;
     }
 
-    chargePowerW = chargePowerW + 100;
-
-    if (chargePowerW === 1100) {
-      chargePowerW = 100;
-      storageSizeWh = storageSizeWh + 500;
-    }
-
-    if (storageSizeWh === 10500) {
-      storageSizeWh = 500;
-      hysteresisDischargePercent = hysteresisDischargePercent + 10;
+    if (storageSizeWh > MAX_STORAGE_SIZE) {
+      storageSizeWh = START_STORAGE_SIZE;
+      hysteresisDischargePercent = hysteresisDischargePercent + HYSTERESIS_STEPS;
     }
   }
 
   console.log(" ");
-  console.log("BEST VALUE:");
-  console.log(minPriceMetadata);
+  console.log("BEST RESULT:");
+  console.log(minPriceSimulationSummary);
 
-  console.log(" ");
-  console.log("BEST VALUE 2kW:");
-  console.log(minPrice2KwStorageMetadata);
+  // plot best result
+  if (minPriceSimulationSummary) {
+    const storage = new Storage(
+      minPriceSimulationSummary.StorageSizeWh,
+      EFFICIENCY_BATTERY_PERCENT
+    );
+    const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
+    const simulationProps: TSimulationProps = {
+      hysteresisChargeDischargePercent: minPriceSimulationSummary.Hysteresis,
+      chargePowerWatt: minPriceSimulationSummary.ChargePowerW,
+      simulationType: SIMULATION_TYPE
+    };
+
+    simulation.start(simulationProps, true);
+  }
 }
 
 //Invoke the main function

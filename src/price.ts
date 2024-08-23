@@ -2,7 +2,11 @@ import fs from "fs";
 import { parse, startOfHour } from "date-fns";
 import { de } from "date-fns/locale";
 import { IPriceHandler } from "./interfaces";
+import { TRange } from "./types";
 
+/**
+ * Handles energy prices
+ */
 export class PriceHandler implements IPriceHandler {
   private readonly consumptionPrice: number;
   private prices: Map<string, number> = new Map();
@@ -12,6 +16,9 @@ export class PriceHandler implements IPriceHandler {
     console.log("Consumption price: " + this.consumptionPrice);
   }
 
+  /**
+   * Loads energy prices into memory
+   */
   loadPriceTable() {
     const fileContent = fs.readFileSync("./data/prices.csv", "utf8");
     const lines = fileContent.split("\n");
@@ -31,7 +38,10 @@ export class PriceHandler implements IPriceHandler {
     }
   }
 
-  getRange(): { from: Date; to: Date } {
+  /**
+   * Returns time range of energy prices
+   */
+  getRange(): TRange {
     const keys = Array.from(this.prices.keys());
     keys.sort();
 
@@ -41,12 +51,19 @@ export class PriceHandler implements IPriceHandler {
     };
   }
 
+  /**
+   * Returns average energy price
+   */
   getAveragePrice() {
     const values = Array.from(this.prices.values());
     const sum = values.reduce((acc, current) => acc + current, 0);
     return this.consumptionPrice + sum / values.length;
   }
 
+  /**
+   * Returns price for a special date
+   * @param date
+   */
   getPrice(date: Date) {
     if (this.prices.size === 0) {
       throw "Price table not loaded";

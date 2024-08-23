@@ -1,0 +1,1 @@
+Grundsätzlich wird der durchschnittliche Verbrauch aller Elektrofahrzeuge auf 15 kWh pro 100 km geschätzt. Ein Modell, welches sich unter dem Durchschnitt bewegt, ist beispielweise der e-Golf. Das Tesla Modell S hingegen verbraucht 18,5 kWh Strom auf 100 km.

@@ -1,4 +1,4 @@
-# Balkonlohn
+# Dynamic Power
 
 ## Requirements
 Npm/node installed
@@ -8,8 +8,5 @@ Npm/node installed
 * npm install
 * npm run ts
 
-## Run (without storage)
+## Run
 * npm start
-
-## Run (with storage)
-* npm start -- 1000   (storage with 1000 Wh = 1kWh)

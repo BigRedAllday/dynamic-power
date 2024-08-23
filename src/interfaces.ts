@@ -1,4 +1,4 @@
-import { TStorageProcessResult } from "./types";
+import { TConsumptionData, TStorageProcessResult } from "./types";
 
 export interface IPriceHandler {
   getAveragePrice(): number;
@@ -7,8 +7,11 @@ export interface IPriceHandler {
 }
 
 export interface IConsumptionHandler {
-  getConsumption(date: Date): number;
-  get800WConsumption(date: Date): number | undefined;
+  getConsumption(date: Date): TConsumptionData;
+}
+
+export interface IBatteryPlanner {
+  getMinChargeWh(date: Date): number;
 }
 
 export interface IStorage {
@@ -18,4 +21,5 @@ export interface IStorage {
   getMinimumCharge(): number | undefined;
   getMaximumCharge(): number;
   isEmpty(): boolean;
+  getStateOfCharge(): number;
 }
