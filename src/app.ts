@@ -13,31 +13,27 @@ import { BatteryPlanner } from "./batteryPlanner";
 
 const SIMULATION_TYPE = ESimulationType.STAND_ALONE_INVERTER;
 const PROFILES = [
-  EConsumptionProfiles.CAR_WORKING_DAY_DRIVE_TO_WORK_10_KM,
-  EConsumptionProfiles.CAR_WEEKEND_USE_DAYTIME_50_KM,
-  EConsumptionProfiles.CAR_WORKING_DAY_SOME_EVENINGS_10KM
+  EConsumptionProfiles.WASHING_MACHINE,
+  EConsumptionProfiles.DISHWASHER
 ];
 
-const START_CHARGE_POWER = 3500; // socket
-const CHARGE_POWER_STEPS = 7500;
-const MAX_CHARGE_POWER = 11000; // wallbox
+const START_CHARGE_POWER = 100;
+const CHARGE_POWER_STEPS = 100;
+const MAX_CHARGE_POWER = 1000;
 
-const START_STORAGE_SIZE = 20000;
-const STORAGE_SIZE_STEPS = 10000;
-const MAX_STORAGE_SIZE = 100000;
+const START_STORAGE_SIZE = 500;
+const STORAGE_SIZE_STEPS = 500;
+const MAX_STORAGE_SIZE = 10000;
 
 const START_HYSTERESIS = 0;
 const HYSTERESIS_STEPS = 10;
 const MAX_HYSTERESIS = 80;
 
 const CONSUMPTION_PRICE = 0.233; // as of 2024-08-16
-const EFFICIENCY_BATTERY_PERCENT = 90;
+const EFFICIENCY_BATTERY_PERCENT = 80;
 
-// added efficiency loss of battery since fixed prices do not use battery in current simulation logic
-// "Fixed Price" is used as reference without battery for now, but in cars we cannot avoid batteries
-// Maye this issue will be fixed in future releases
-// 0.369 is current electricity price of Hamburg`s electricity provider (as of 2024-08-16)
-const FIXED_PRICE: number | undefined = 0.369 * (100 / EFFICIENCY_BATTERY_PERCENT);
+// undefined: use average price of dynamic price
+const FIXED_PRICE: number | undefined = undefined;
 
 async function main() {
   const priceHandler = new PriceHandler(CONSUMPTION_PRICE);
