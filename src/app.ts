@@ -12,10 +12,7 @@ import {
 import { BatteryPlanner } from "./batteryPlanner";
 
 const SIMULATION_TYPE = ESimulationType.STAND_ALONE_INVERTER;
-const PROFILES = [
-  EConsumptionProfiles.WASHING_MACHINE,
-  EConsumptionProfiles.DISHWASHER
-];
+const PROFILES = [EConsumptionProfiles.WASHING_MACHINE, EConsumptionProfiles.DISHWASHER];
 
 const START_CHARGE_POWER = 100;
 const CHARGE_POWER_STEPS = 100;
@@ -29,14 +26,14 @@ const START_HYSTERESIS = 0;
 const HYSTERESIS_STEPS = 10;
 const MAX_HYSTERESIS = 80;
 
-const CONSUMPTION_PRICE = 0.233; // as of 2024-08-16
+const TAXES = 0.233;
 const EFFICIENCY_BATTERY_PERCENT = 80;
 
 // undefined: use average price of dynamic price
 const FIXED_PRICE: number | undefined = undefined;
 
 async function main() {
-  const priceHandler = new PriceHandler(CONSUMPTION_PRICE);
+  const priceHandler = new PriceHandler(TAXES);
   priceHandler.loadPriceTable();
 
   const consumptionHandler = new ConsumptionHandler();

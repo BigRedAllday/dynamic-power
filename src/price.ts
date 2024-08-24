@@ -8,12 +8,12 @@ import { TRange } from "./types";
  * Handles energy prices
  */
 export class PriceHandler implements IPriceHandler {
-  private readonly consumptionPrice: number;
+  private readonly taxes: number;
   private prices: Map<string, number> = new Map();
 
-  constructor(consumptionPriceEuro: number) {
-    this.consumptionPrice = consumptionPriceEuro;
-    console.log("Consumption price: " + this.consumptionPrice);
+  constructor(taxesEuro: number) {
+    this.taxes = taxesEuro;
+    console.log("Taxes and duties: " + this.taxes);
   }
 
   /**
@@ -57,7 +57,7 @@ export class PriceHandler implements IPriceHandler {
   getAveragePrice() {
     const values = Array.from(this.prices.values());
     const sum = values.reduce((acc, current) => acc + current, 0);
-    return this.consumptionPrice + sum / values.length;
+    return this.taxes + sum / values.length;
   }
 
   /**
@@ -73,6 +73,6 @@ export class PriceHandler implements IPriceHandler {
     if (price === undefined) {
       throw `Price for ${date} not available`;
     }
-    return price + this.consumptionPrice;
+    return price + this.taxes;
   }
 }
