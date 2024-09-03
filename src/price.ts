@@ -1,8 +1,8 @@
 import fs from "fs";
-import { parse, startOfHour } from "date-fns";
+import {addHours, endOfDay, isBefore, parse, startOfDay, startOfHour} from "date-fns";
 import { de } from "date-fns/locale";
 import { IPriceHandler } from "./interfaces";
-import { TRange } from "./types";
+import { TRange} from "./types";
 
 /**
  * Handles energy prices
@@ -74,5 +74,46 @@ export class PriceHandler implements IPriceHandler {
       throw `Price for ${date} not available`;
     }
     return price + this.taxes;
+  }
+
+  /**
+   * Returns the best period of the day of the given date
+   * @param date date
+   * @param numberOfHours longitud of the period
+   * @private
+   */
+  getBestPeriodOfDay(date: Date, numberOfHours: number) {
+    let currentDate = startOfDay(date);
+    const endOfCurrentDay = endOfDay(date);
+    const allPrices: number[] = [];
+
+    while (isBefore(currentDate, endOfCurrentDay)) {
+      allPrices.push(this.getPrice(currentDate));
+      currentDate = addHours(currentDate, 1);
+    }
+
+    return this.findMinSumSubarray(allPrices, numberOfHours);
+  }
+
+  private findMinSumSubarray(prices: number[], numberOfHours: number): number[] {
+    if (numberOfHours > prices.length) {
+      throw new Error("x is larger than the array length");
+    }
+
+    let minSum = Infinity;
+    let minSubarray: number[] = [];
+
+    for (let i = 0; i <= prices.length - numberOfHours; i++) {
+      let currentSum = 0;
+      for (let j = 0; j < numberOfHours; j++) {
+        currentSum += prices[i + j];
+      }
+      if (currentSum < minSum) {
+        minSum = currentSum;
+        minSubarray = prices.slice(i, i + numberOfHours);
+      }
+    }
+
+    return minSubarray;
   }
 }

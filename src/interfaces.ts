@@ -1,13 +1,15 @@
-import { TConsumptionData, TStorageProcessResult } from "./types";
+import {TConsumptionDataHourly, TStorageProcessResult} from "./types";
 
 export interface IPriceHandler {
   getAveragePrice(): number;
   getRange(): { from: Date; to: Date };
   getPrice(date: Date): number;
+  getBestPeriodOfDay(date: Date, numberOfHours: number): number[];
 }
 
 export interface IConsumptionHandler {
-  getConsumption(date: Date): TConsumptionData;
+  getConsumption(date: Date): TConsumptionDataHourly;
+  getConsumptionPeriodsOfDay(date: Date): number[];
 }
 
 export interface IBatteryPlanner {

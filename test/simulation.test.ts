@@ -1,11 +1,11 @@
-import { Simulation } from "../src/simulation";
+import { BatterySimulation } from "../src/batterySimulation";
 import { IBatteryPlanner, IConsumptionHandler, IPriceHandler } from "../src/interfaces";
 import { Storage } from "../src/storage";
 import { TSimulationProps, ESimulationType } from "../src/types";
 import { addHours } from "date-fns";
 
 describe("Simulation with storage integration", () => {
-  let sut: Simulation;
+  let sut: BatterySimulation;
   const priceHandler: IPriceHandler = {
     getPrice: jest.fn(),
     getAveragePrice: jest.fn(),
@@ -24,7 +24,7 @@ describe("Simulation with storage integration", () => {
 
   beforeEach(() => {
     storage.reset();
-    sut = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
+    sut = new BatterySimulation(priceHandler, consumptionHandler, batteryPlanner, storage);
   });
 
   afterEach(() => {
@@ -496,7 +496,7 @@ describe("Simulation with storage integration", () => {
 
       // run 1
       const storage1 = new Storage(400, 80);
-      const simulation1 = new Simulation(
+      const simulation1 = new BatterySimulation(
         priceHandler,
         consumptionHandler,
         batteryPlanner,
@@ -507,7 +507,7 @@ describe("Simulation with storage integration", () => {
       const diff1 = result1.totalCostsFixed - result1.totalCostsDynamic;
 
       const storage2 = new Storage(400, 20);
-      const simulation2 = new Simulation(
+      const simulation2 = new BatterySimulation(
         priceHandler,
         consumptionHandler,
         batteryPlanner,
