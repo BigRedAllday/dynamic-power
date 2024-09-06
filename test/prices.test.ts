@@ -30,26 +30,39 @@ describe("Prices", () => {
   });
 
   it("Some random periods of day return correct results", async () => {
-    17.12.2023 04:00  8
-    0.0539546
-    0.050932
-    0.0511224
-    0.0341411
-    0.0313803
-    0.0355453
-    0.0464457
-    0.0539189
+    const bestPrices1 = prices.getBestPeriodOfDay(new Date("2023-12-17T12:00:00.000"), 8);
+    expect(bestPrices1.find(p => p.date.toISOString() === "2023-12-16T23:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0539546);
+    expect(bestPrices1.find(p => p.date.toISOString() === "2023-12-17T00:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.050932);
+    expect(bestPrices1.find(p => p.date.toISOString() === "2023-12-17T01:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0511224);
+    expect(bestPrices1.find(p => p.date.toISOString() === "2023-12-17T02:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0341411);
+    expect(bestPrices1.find(p => p.date.toISOString() === "2023-12-17T03:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0313803);
+    expect(bestPrices1.find(p => p.date.toISOString() === "2023-12-17T04:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0355453);
+    expect(bestPrices1.find(p => p.date.toISOString() === "2023-12-17T05:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0464457);
+    expect(bestPrices1.find(p => p.date.toISOString() === "2023-12-17T06:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0539189);
 
+    const bestPrices2 = prices.getBestPeriodOfDay(new Date("2023-11-11T07:00:00.000"), 4);
+    expect(bestPrices2.find(p => p.date.toISOString() === "2023-11-11T01:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.1021972);
+    expect(bestPrices2.find(p => p.date.toISOString() === "2023-11-11T02:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0990199);
+    expect(bestPrices2.find(p => p.date.toISOString() === "2023-11-11T03:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.0984249);
+    expect(bestPrices2.find(p => p.date.toISOString() === "2023-11-11T04:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(0.1016736);
 
-
-    11.11.2023 19:00  4
-    30.06.2023 16:00  2
-
-
-
-    
-
-    prices.getBestPeriodOfDay()
+    const bestPrices3 = prices.getBestPeriodOfDay(new Date("2023-07-02T21:00:00.000"), 2);
+    expect(bestPrices3.find(p => p.date.toISOString() === "2023-07-02T12:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(-0.595);
+    expect(bestPrices3.find(p => p.date.toISOString() === "2023-07-02T13:00:00.000Z")!.price - consumptionPrice)
+        .toBeCloseTo(-0.47481);
   });
 
   it("Throws corresponding error if price not available", async () => {
@@ -59,7 +72,7 @@ describe("Prices", () => {
 
   it("Throws corresponding error when price table not loaded", async () => {
     expect(() => prices.getPrice(new Date("2022-01-01T00:00:00"))).toThrow(
-      "Price table not loaded"
+      "Price for Sat Jan 01 2022 00:00:00 GMT+0100 (Central European Standard Time) not available"
     );
   });
 });

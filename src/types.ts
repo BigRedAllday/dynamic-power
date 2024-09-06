@@ -61,7 +61,7 @@ export type TConsumptionDataHourly = {
 };
 
 export type TBestPriceValue = {
-  hour: number;
+  date: Date;
   price: number;
 }
 

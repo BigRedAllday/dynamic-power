@@ -25,12 +25,12 @@ export class MoveSimulation {
         ) {
             const currentTime = new Date(current);
 
-            const consumptionsInDay = this.consumptionHandler.getConsumptionPeriodsOfDay(currentTime);
+            const consumptionsInDay = this.consumptionHandler.getCompressedConsumptionsOfDay(currentTime);
 
             const bestPrices = this.priceHandler.getBestPeriodOfDay(currentTime, consumptionsInDay.length);
 
             for (let i = 0; i < consumptionsInDay.length; i++) {
-                totalPrice = bestPrices[i] + consumptionsInDay[i];
+                totalPrice = totalPrice + bestPrices[i].price * consumptionsInDay[i] / 1000;
             }
         }
 

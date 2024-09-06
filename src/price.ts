@@ -2,7 +2,7 @@ import fs from "fs";
 import {addHours, endOfDay, isBefore, parse, startOfDay, startOfHour} from "date-fns";
 import { de } from "date-fns/locale";
 import { IPriceHandler } from "./interfaces";
-import { TRange} from "./types";
+import {TBestPriceValue, TRange} from "./types";
 
 /**
  * Handles energy prices
@@ -20,7 +20,7 @@ export class PriceHandler implements IPriceHandler {
    * Loads energy prices into memory
    */
   loadPriceTable() {
-    const fileContent = fs.readFileSync("./data/prices.csv", "utf8");
+    const fileContent = fs.readFileSync("./data/day_ahead_prices.csv", "utf8");
     const lines = fileContent.split("\n");
 
     for (const line of lines) {
@@ -82,31 +82,31 @@ export class PriceHandler implements IPriceHandler {
    * @param numberOfHours longitud of the period
    * @private
    */
-  getBestPeriodOfDay(date: Date, numberOfHours: number) {
+  getBestPeriodOfDay(date: Date, numberOfHours: number): TBestPriceValue[] {
     let currentDate = startOfDay(date);
     const endOfCurrentDay = endOfDay(date);
-    const allPrices: number[] = [];
+    const allPrices: TBestPriceValue[] = [];
 
     while (isBefore(currentDate, endOfCurrentDay)) {
-      allPrices.push(this.getPrice(currentDate));
+      allPrices.push({date: currentDate, price: this.getPrice(currentDate)});
       currentDate = addHours(currentDate, 1);
     }
 
     return this.findMinSumSubarray(allPrices, numberOfHours);
   }
 
-  private findMinSumSubarray(prices: number[], numberOfHours: number): number[] {
+  private findMinSumSubarray(prices: TBestPriceValue[], numberOfHours: number): TBestPriceValue[] {
     if (numberOfHours > prices.length) {
       throw new Error("x is larger than the array length");
     }
 
     let minSum = Infinity;
-    let minSubarray: number[] = [];
+    let minSubarray: TBestPriceValue[] = [];
 
     for (let i = 0; i <= prices.length - numberOfHours; i++) {
       let currentSum = 0;
       for (let j = 0; j < numberOfHours; j++) {
-        currentSum += prices[i + j];
+        currentSum += prices[i + j].price;
       }
       if (currentSum < minSum) {
         minSum = currentSum;

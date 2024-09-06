@@ -9,11 +9,13 @@ describe("Simulation with storage integration", () => {
   const priceHandler: IPriceHandler = {
     getPrice: jest.fn(),
     getAveragePrice: jest.fn(),
-    getRange: jest.fn()
+    getRange: jest.fn(),
+    getBestPeriodOfDay: jest.fn()
   };
 
   const consumptionHandler: IConsumptionHandler = {
-    getConsumption: jest.fn()
+    getConsumption: jest.fn(),
+    getCompressedConsumptionsOfDay: jest.fn()
   };
 
   const batteryPlanner: IBatteryPlanner = {

@@ -28,6 +28,8 @@ export class ConsumptionHandler implements IConsumptionHandler {
       }
       const lines = fileContent.split("\n");
 
+      let currentDailyIndex = 0;
+
       for (const line of lines) {
         if (lines.indexOf(line) === 0 || line.length === 0) {
           continue;
@@ -35,7 +37,24 @@ export class ConsumptionHandler implements IConsumptionHandler {
 
         const values = line.split(";");
         this.setHourlyValues(values);
-        this.setDailyValues(values);
+
+        // daily values
+        const key = values[0];
+        const value = Number.parseFloat(values[2]);
+
+        if (value !== 0) {
+          const currentValues = this.consumptionMapDaily.get(key);
+
+          if (!currentValues) {
+            this.consumptionMapDaily.set(key, [value]);
+          } else if (currentValues.length <= currentDailyIndex) {
+            currentValues.push(value);
+          } else {
+            currentValues[currentDailyIndex] = currentValues[currentDailyIndex] + value;
+          }
+
+          currentDailyIndex = currentDailyIndex + 1;
+        }
       }
     }
   }
@@ -54,10 +73,10 @@ export class ConsumptionHandler implements IConsumptionHandler {
   }
 
   /**
-   * Returns only consumption data where consumption is not null
+   * Returns all consumptions trying to consume then in the shortest time possible
    * @param date date to request
    */
-  getConsumptionPeriodsOfDay(date: Date): number[] {
+  getCompressedConsumptionsOfDay(date: Date): number[] {
     const key = this.getDayOfWeek(date);
     const consumptionDataDaily = this.consumptionMapDaily.get(key);
     if (!consumptionDataDaily) {
@@ -90,19 +109,6 @@ export class ConsumptionHandler implements IConsumptionHandler {
       };
       this.setBlockedOr800WhValue(value800WOrBlocked, consumptionData);
       this.consumptionMapHourly.set(key, consumptionData);
-    }
-  }
-
-  private setDailyValues(lineValues: string[]) {
-    const key = lineValues[0];
-    const value = Number.parseFloat(lineValues[2]);
-
-    if (!this.consumptionMapDaily.has(key)) {
-      this.consumptionMapDaily.set(key, []);
-    }
-
-    if (value) {
-      this.consumptionMapDaily.get(key)!.push(value);
     }
   }
 
