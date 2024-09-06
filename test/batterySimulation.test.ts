@@ -3,6 +3,7 @@ import { IBatteryPlanner, IConsumptionHandler, IPriceHandler } from "../src/inte
 import { Storage } from "../src/storage";
 import { TSimulationProps, ESimulationType } from "../src/types";
 import { addHours } from "date-fns";
+import { createGetRangeSpy } from "./commonSpies";
 
 describe("Simulation with storage integration", () => {
   let sut: BatterySimulation;
@@ -49,12 +50,7 @@ describe("Simulation with storage integration", () => {
       throw "no price value found";
     });
 
-    jest.spyOn(priceHandler, "getRange").mockImplementation(() => {
-      return {
-        from: new Date(someStartDate),
-        to: addHours(someStartDate, data.length - 1)
-      };
-    });
+    createGetRangeSpy(priceHandler, someStartDate, data.length - 1);
 
     jest.spyOn(priceHandler, "getAveragePrice").mockImplementation(() => {
       // since this is a test, we do it the "simple" way
