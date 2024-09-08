@@ -27,6 +27,7 @@ export enum EConsumptionProfiles {
 }
 
 export const HOUR_IN_MS = 1000 * 60 * 60;
+export const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
 export enum ESimulationType {
   STAND_ALONE_INVERTER,
@@ -53,11 +54,16 @@ export type TSimulationResult = {
   maximumCharge: number;
 };
 
-export type TConsumptionData = {
+export type TConsumptionDataHourly = {
   consumptionWh: number;
   consumptionWh800?: number;
   isBlocked?: boolean;
 };
+
+export type TBestPriceValue = {
+  date: Date;
+  price: number;
+}
 
 export type TSimulationSummary = {
   StorageSizeWh: number;

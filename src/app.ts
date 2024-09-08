@@ -1,6 +1,6 @@
 import { PriceHandler } from "./price";
 import { ConsumptionHandler } from "./consumption";
-import { Simulation } from "./simulation";
+import { BatterySimulation } from "./batterySimulation";
 import { Storage } from "./storage";
 import * as console from "console";
 import {
@@ -10,15 +10,16 @@ import {
   ESimulationType
 } from "./types";
 import { BatteryPlanner } from "./batteryPlanner";
+import {MoveSimulation} from "./moveSimulation";
 
 const SIMULATION_TYPE = ESimulationType.STAND_ALONE_INVERTER;
 const PROFILES = [EConsumptionProfiles.WASHING_MACHINE, EConsumptionProfiles.DISHWASHER];
 
-const START_CHARGE_POWER = 100;
+const START_CHARGE_POWER = 1000;
 const CHARGE_POWER_STEPS = 100;
 const MAX_CHARGE_POWER = 1000;
 
-const START_STORAGE_SIZE = 500;
+const START_STORAGE_SIZE = 10000;
 const STORAGE_SIZE_STEPS = 500;
 const MAX_STORAGE_SIZE = 10000;
 
@@ -30,15 +31,15 @@ const TAXES = 0.233;
 const EFFICIENCY_BATTERY_PERCENT = 80;
 
 // undefined: use average price of dynamic price
-const FIXED_PRICE: number | undefined = undefined;
+const FIXED_PRICE: number | undefined = 0.3;
 
 async function main() {
-  const priceHandler = new PriceHandler(TAXES);
-  priceHandler.loadPriceTable();
-
   const consumptionHandler = new ConsumptionHandler();
   consumptionHandler.loadProfiles(PROFILES);
   const hasBlockedAreas = consumptionHandler.hasBlockedAreas();
+
+  const priceHandler = new PriceHandler(TAXES);
+  priceHandler.loadPriceTable();
 
   const batteryPlanner = new BatteryPlanner(consumptionHandler);
 
@@ -51,7 +52,7 @@ async function main() {
 
   console.log(`Average Price: ${priceHandler.getAveragePrice()}`);
 
-  console.log("Starting simulation... please wait until caches are filled");
+  console.log("Starting battery simulation... please wait until caches are filled");
 
   while (
     (chargePowerW <= MAX_CHARGE_POWER ||
@@ -68,7 +69,7 @@ async function main() {
     }
 
     const storage = new Storage(storageSizeWh, EFFICIENCY_BATTERY_PERCENT);
-    const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
+    const simulation = new BatterySimulation(priceHandler, consumptionHandler, batteryPlanner, storage);
 
     const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: hysteresisDischargePercent,
@@ -119,7 +120,7 @@ async function main() {
       minPriceSimulationSummary.StorageSizeWh,
       EFFICIENCY_BATTERY_PERCENT
     );
-    const simulation = new Simulation(priceHandler, consumptionHandler, batteryPlanner, storage);
+    const simulation = new BatterySimulation(priceHandler, consumptionHandler, batteryPlanner, storage);
     const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: minPriceSimulationSummary.Hysteresis,
       chargePowerWatt: minPriceSimulationSummary.ChargePowerW,
@@ -128,6 +129,11 @@ async function main() {
 
     simulation.start(simulationProps, true);
   }
+
+  // move simulation
+  const simulation = new MoveSimulation(priceHandler, consumptionHandler);
+  const movePrice = simulation.start();
+  console.log(`Price if we move consumption to best price periods: ${movePrice}`);
 }
 
 //Invoke the main function

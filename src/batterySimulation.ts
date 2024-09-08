@@ -4,7 +4,7 @@ import {
   TSimulationProps,
   TSimulationResult,
   ESimulationType,
-  TConsumptionData
+  TConsumptionDataHourly
 } from "./types";
 import * as fs from "fs";
 import { addHours } from "date-fns";
@@ -12,7 +12,7 @@ import { addHours } from "date-fns";
 /**
  * Simulation logic
  */
-export class Simulation {
+export class BatterySimulation {
   private priceHandler: IPriceHandler;
   private consumptionHandler: IConsumptionHandler;
   private storage: IStorage;
@@ -225,7 +225,7 @@ export class Simulation {
 
   private getCsvLine(
     currentTime: Date,
-    consumptionData: TConsumptionData,
+    consumptionData: TConsumptionDataHourly,
     currentPrice: number,
     paidPrice: number,
     fixedPrice: number,
