@@ -31,7 +31,7 @@ const TAXES = 0.233;
 const EFFICIENCY_BATTERY_PERCENT = 80;
 
 // undefined: use average price of dynamic price
-const FIXED_PRICE: number | undefined = undefined;
+const FIXED_PRICE: number | undefined = 0.3;
 
 async function main() {
   const consumptionHandler = new ConsumptionHandler();
