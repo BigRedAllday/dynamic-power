@@ -44,7 +44,7 @@ export class BatterySimulation {
     const supportedRange = this.priceHandler.getRange();
 
     if (simulationProps.simulationType === ESimulationType.GRID_INVERTER) {
-      this.storage.setConsumptionLimit(800);
+      this.storage.setConsumptionLimit(simulationProps.maxDischargePowerWatt);
     } else {
       this.storage.resetConsumptionLimit();
     }

@@ -15,6 +15,10 @@ export enum EConsumptionProfiles {
   TV = "tv.csv",
   DISHWASHER = "dishwasher.csv",
   HOME_OFFICE = "homeoffice.csv",
+  COOKING = "cooking.csv",
+  LIGHTING = "lighting.csv",
+  MORNING_ROUTINE = "morning_routine.csv",
+  STANDBY = "standby.csv",
   BASE_100 = "100Watt.csv",
   BASE_200 = "200Watt.csv",
 
@@ -38,6 +42,7 @@ export enum ESimulationType {
 export type TSimulationProps = {
   hysteresisChargeDischargePercent: number;
   chargePowerWatt: number;
+  maxDischargePowerWatt: number,
   simulationType: ESimulationType;
   fixedPrice?: number;
 };

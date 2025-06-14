@@ -12,16 +12,28 @@ import {
 import { BatteryPlanner } from "./batteryPlanner";
 import {MoveSimulation} from "./moveSimulation";
 
-const SIMULATION_TYPE = ESimulationType.STAND_ALONE_INVERTER;
-const PROFILES = [EConsumptionProfiles.WASHING_MACHINE, EConsumptionProfiles.DISHWASHER];
+const SIMULATION_TYPE = ESimulationType.GRID_INVERTER;
+const PROFILES = [
+  EConsumptionProfiles.STANDBY,
+  EConsumptionProfiles.ROUTER,
+  EConsumptionProfiles.REFRIGERATOR,
+  EConsumptionProfiles.COOKING,
+  EConsumptionProfiles.DISHWASHER,
+  EConsumptionProfiles.LIGHTING,
+  EConsumptionProfiles.MORNING_ROUTINE,
+  EConsumptionProfiles.TV,
+  EConsumptionProfiles.WASHING_MACHINE
+];
 
-const START_CHARGE_POWER = 1000;
+const START_CHARGE_POWER = 100;
 const CHARGE_POWER_STEPS = 100;
 const MAX_CHARGE_POWER = 1000;
 
-const START_STORAGE_SIZE = 10000;
+const MAX_DISCHARGE_POWER = 800;
+
+const START_STORAGE_SIZE = 1000;
 const STORAGE_SIZE_STEPS = 500;
-const MAX_STORAGE_SIZE = 10000;
+const MAX_STORAGE_SIZE = 4000;
 
 const START_HYSTERESIS = 0;
 const HYSTERESIS_STEPS = 10;
@@ -74,6 +86,7 @@ async function main() {
     const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: hysteresisDischargePercent,
       chargePowerWatt: chargePowerW,
+      maxDischargePowerWatt: MAX_DISCHARGE_POWER,
       simulationType: SIMULATION_TYPE,
       fixedPrice: FIXED_PRICE
     };
@@ -124,6 +137,7 @@ async function main() {
     const simulationProps: TSimulationProps = {
       hysteresisChargeDischargePercent: minPriceSimulationSummary.Hysteresis,
       chargePowerWatt: minPriceSimulationSummary.ChargePowerW,
+      maxDischargePowerWatt: MAX_DISCHARGE_POWER,
       simulationType: SIMULATION_TYPE
     };
 

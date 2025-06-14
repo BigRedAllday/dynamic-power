@@ -97,7 +97,7 @@ export class PriceHandler implements IPriceHandler {
 
   private findMinSumSubarray(prices: TBestPriceValue[], numberOfHours: number): TBestPriceValue[] {
     if (numberOfHours > prices.length) {
-      throw new Error("x is larger than the array length");
+      throw new Error(`number of hours (${numberOfHours}) is larger than the array length (${prices.length})`);
     }
 
     let minSum = Infinity;

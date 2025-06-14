@@ -29,6 +29,7 @@ export class ConsumptionHandler implements IConsumptionHandler {
       const lines = fileContent.split("\n");
 
       let currentDailyIndex = 0;
+      let oldKey = "";
 
       for (const line of lines) {
         if (lines.indexOf(line) === 0 || line.length === 0) {
@@ -41,6 +42,10 @@ export class ConsumptionHandler implements IConsumptionHandler {
         // daily values
         const key = values[0];
         const value = Number.parseFloat(values[2]);
+
+        if (oldKey !== key) {
+          currentDailyIndex = 0;
+        }
 
         if (value !== 0) {
           const currentValues = this.consumptionMapDaily.get(key);
